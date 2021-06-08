@@ -2,6 +2,7 @@ package signer
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 )
 
@@ -15,6 +16,9 @@ func credentialType(credentialJSON []byte) (string, error) {
 	err := json.Unmarshal(credentialJSON, &parsedCredential)
 	if err != nil {
 		return "", err
+	}
+	if parsedCredential.Type == "" {
+		return "", errors.New("credential type is empty")
 	}
 
 	return parsedCredential.Type, nil
