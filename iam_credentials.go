@@ -17,7 +17,7 @@ type iamCredentialsSigner struct {
 	ts        oauth2.TokenSource
 }
 
-func (s *iamCredentialsSigner) ServiceAccount() string {
+func (s *iamCredentialsSigner) ServiceAccount(context.Context) string {
 	return s.target
 }
 

@@ -34,7 +34,7 @@ func _main() error {
 	name := submatch[re.SubexpIndex("name")]
 	fmt.Printf("bucket: %s, name: %s\n", bucket, name)
 	url, err := storage.SignedURL(bucket, name, &storage.SignedURLOptions{
-		GoogleAccessID: s.ServiceAccount(),
+		GoogleAccessID: s.ServiceAccount(ctx),
 		SignBytes:      s.Signer(ctx),
 		Method:         *method,
 		Expires:        time.Now().Add(*duration),

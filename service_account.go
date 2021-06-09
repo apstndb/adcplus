@@ -18,7 +18,7 @@ type serviceAccountSigner struct {
 	rsaKey      *rsa.PrivateKey
 }
 
-func (s *serviceAccountSigner) ServiceAccount() string {
+func (s *serviceAccountSigner) ServiceAccount(context.Context) string {
 	return s.clientEmail
 }
 
