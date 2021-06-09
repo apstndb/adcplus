@@ -77,7 +77,7 @@ func SmartSigner(ctx context.Context, options ...Option) (Signer, error) {
 		return nil, err
 	}
 
-	// If targetPrincipal is populated, use ADC with
+	// If targetPrincipal is populated, use ADC with impersonation
 	if config.targetPrincipal != "" {
 		return IamCredentialsSigner(config.targetPrincipal, config.delegates, credential.TokenSource)
 	}
