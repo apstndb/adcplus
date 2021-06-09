@@ -16,17 +16,16 @@ import (
 type serviceAccountSigner struct {
 	clientEmail string
 	rsaKey      *rsa.PrivateKey
+	keyId       string
 }
 
 func (s *serviceAccountSigner) ServiceAccount(context.Context) string {
 	return s.clientEmail
 }
-
-func (s serviceAccountSigner) Signer(context.Context) func([]byte) ([]byte, error) {
-	return func(b []byte) ([]byte, error) {
-		sum := sha256.Sum256(b)
-		return rsa.SignPKCS1v15(rand.Reader, s.rsaKey, crypto.SHA256, sum[:])
-	}
+func (s serviceAccountSigner) SignBlob(_ context.Context, b []byte) (string, []byte, error) {
+	sum := sha256.Sum256(b)
+	sig, err := rsa.SignPKCS1v15(rand.Reader, s.rsaKey, crypto.SHA256, sum[:])
+	return s.keyId, sig, err
 }
 
 // ServiceAccountSigner returns Signer which can sign without any network access.
@@ -46,5 +45,5 @@ func ServiceAccountSigner(jsonKey []byte) (Signer, error) {
 	if !ok {
 		return nil, errors.New("private key failed rsa.PrivateKey type assertion")
 	}
-	return &serviceAccountSigner{clientEmail: cfg.Email, rsaKey: rsaKey}, nil
+	return &serviceAccountSigner{clientEmail: cfg.Email, rsaKey: rsaKey, keyId: cfg.PrivateKeyID}, nil
 }

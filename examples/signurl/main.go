@@ -35,7 +35,7 @@ func _main() error {
 	fmt.Printf("bucket: %s, name: %s\n", bucket, name)
 	url, err := storage.SignedURL(bucket, name, &storage.SignedURLOptions{
 		GoogleAccessID: s.ServiceAccount(ctx),
-		SignBytes:      s.Signer(ctx),
+		SignBytes:      signer.SignWithoutKeyAdaptor(ctx, s),
 		Method:         *method,
 		Expires:        time.Now().Add(*duration),
 	})

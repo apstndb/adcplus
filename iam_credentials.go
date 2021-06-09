@@ -21,8 +21,7 @@ func (s *iamCredentialsSigner) ServiceAccount(context.Context) string {
 	return s.target
 }
 
-func (s *iamCredentialsSigner) Signer(ctx context.Context) func([]byte) ([]byte, error) {
-	return func(b []byte) ([]byte, error) {
+func (s *iamCredentialsSigner) SignBlob(ctx context.Context, b[]byte) (string, []byte, error) {
 		// Actually, WithTokenSource(nil) will be ignored so this condition doesn't make any changes.
 		var opts []option.ClientOption
 		if s.ts != nil {
@@ -31,7 +30,7 @@ func (s *iamCredentialsSigner) Signer(ctx context.Context) func([]byte) ([]byte,
 
 		client, err := credentials.NewIamCredentialsClient(ctx, opts...)
 		if err != nil {
-			return nil, err
+			return "", nil, err
 		}
 		defer client.Close()
 
@@ -41,10 +40,9 @@ func (s *iamCredentialsSigner) Signer(ctx context.Context) func([]byte) ([]byte,
 			Payload:   b,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("iamCredentialsSigner can't call SignBlob as %s: %w", s.target, err)
+			return "", nil, fmt.Errorf("iamCredentialsSigner can't call SignBlob as %s: %w", s.target, err)
 		}
-		return resp.GetSignedBlob(), nil
-	}
+		return resp.GetKeyId(), resp.GetSignedBlob(), nil
 }
 
 // IamCredentialsSigner makes new Signer.
