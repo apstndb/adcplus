@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -24,6 +23,8 @@ func _main() error {
 	_ = output
 	flag.Parse()
 
+	ctx := context.Background()
+
 	var reader io.Reader
 	if *input != "" {
 		file, err := os.Open(*input)
@@ -35,8 +36,23 @@ func _main() error {
 	} else {
 		reader = os.Stdin
 	}
+
+	var writer io.Writer
+	if *output != "" {
+		file, err := os.Create(*input, )
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		writer = file
+	} else {
+		writer = os.Stdout
+	}
+
 	b, err := ioutil.ReadAll(reader)
-	ctx := context.Background()
+	if err != nil {
+		return err
+	}
 	s, err := signer.SmartSigner(ctx)
 	if err != nil {
 		return err
@@ -46,6 +62,6 @@ func _main() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(jwt)
+	writer.Write([]byte(jwt))
 	return nil
 }
