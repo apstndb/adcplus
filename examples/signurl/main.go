@@ -17,6 +17,7 @@ func main() {
 		log.Fatalln(err)
 	}
 }
+
 func _main() error {
 	method := flag.String("m", "GET", "")
 	duration := flag.Duration("d", 1*time.Hour, "")

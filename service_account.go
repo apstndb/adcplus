@@ -19,6 +19,11 @@ type serviceAccountSigner struct {
 	keyId       string
 }
 
+func (s *serviceAccountSigner) SignJwt(ctx context.Context, claims string) (string, error) {
+	_, signed, err := signJwtHelper(ctx, claims, s.keyId, s)
+	return signed, err
+}
+
 func (s *serviceAccountSigner) ServiceAccount(context.Context) string {
 	return s.clientEmail
 }
@@ -30,7 +35,8 @@ func (s serviceAccountSigner) SignBlob(_ context.Context, b []byte) (string, []b
 
 // ServiceAccountSigner returns Signer which can sign without any network access.
 func ServiceAccountSigner(jsonKey []byte) (Signer, error) {
-	// google.JWTConfigFromJSON is actually alternative json.Marshal because credentialFile is not exported
+	// google.JWTConfigFromJSON is used to extract client_email, private_key, private_key_id
+	// because credentialFile struct is not exported.
 	cfg, err := google.JWTConfigFromJSON(jsonKey)
 	if err != nil {
 		return nil, err

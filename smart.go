@@ -9,7 +9,6 @@ import (
 	"golang.org/x/oauth2/google"
 	goauth2 "google.golang.org/api/oauth2/v1"
 	"google.golang.org/api/option"
-	"google.golang.org/appengine"
 )
 
 const impSaEnvName = "CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT"
@@ -25,9 +24,17 @@ const (
 type smartSignerConfig struct {
 	targetPrincipal string
 	delegates       []string
+	enableAppengineSigner bool
 }
 
 type Option func(*smartSignerConfig) error
+
+func WithExperimentalAppEngineSigner(enable bool) Option {
+	return func(config *smartSignerConfig) error {
+		config.enableAppengineSigner = enable
+		return nil
+	}
+}
 
 func WithTargetPrincipal(targetPrincipal string) Option {
 	return func(config *smartSignerConfig) error {
@@ -64,51 +71,55 @@ func calcSmartSignerConfig(opts ...Option) (*smartSignerConfig, error) {
 // Impersonation setting is supplied from below in descending order of priority.
 // 	1. options e.g. signer.WithTargetPrincipal, signer.WithDelegates
 // 	2. `CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT` environment variable
+// If impersonation is not applied, all credentials except App Engine 1st gen(only Go 1.11) and Service Account Key need a Token Creator role to themselves.
+// 	* https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials?hl=en
+// 	* https://cloud.google.com/iam/docs/impersonating-service-accounts?hl=en
 func SmartSigner(ctx context.Context, options ...Option) (Signer, error) {
 	config, err := calcSmartSignerConfig(options...)
 	if err != nil {
 		return nil, err
 	}
 
-	// Find environment variable credential and well-known file credential(gcloud auth application-default) in ADC manner.
+	// Find credentials in ADC manner.
 	// See also https://google.aip.dev/auth/4110.
-	credential, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// If targetPrincipal is populated, use ADC with impersonation
 	if config.targetPrincipal != "" {
-		return IamCredentialsSigner(config.targetPrincipal, config.delegates, credential.TokenSource)
+		return IamCredentialsSigner(config.targetPrincipal, config.delegates, cred.TokenSource)
 	}
 
-	if len(credential.JSON) != 0 {
-		t, err := credentialType(credential.JSON)
+	if len(cred.JSON) != 0 {
+		t, err := credentialType(cred.JSON)
 		if err != nil {
 			return nil, err
 		}
 
 		switch t {
 		case userCredentialsKey:
-			return nil, fmt.Errorf("authorized_user is unsupported so set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credential")
+			return nil, fmt.Errorf("authorized_user is unsupported so set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials")
 		case serviceAccountKey:
-			return ServiceAccountSigner(credential.JSON)
+			return ServiceAccountSigner(cred.JSON)
 		case externalAccountKey:
 			fallthrough
 		default:
-			// fallthrough
+			// fallthrough to IAM Credentials
 		}
 	} else {
 		// App Engine or metadata server credentials are possible in this branch.
 		// appengine.SignBytes can sign blob without Token Creator roles in go111 runtime.
-		if appengine.IsStandard() && os.Getenv("GAE_RUNTIME") == "go111" {
+		// Ensure initialization doesn't need an appengine context.
+		if config.enableAppengineSigner && isSupportedAppEngineRuntime() {
 			return AppEngineSigner()
 		}
+		// fall through to IAM Credentials because metadata server doesn't have SignBlob
 	}
 
-	ts := credential.TokenSource
+	ts := cred.TokenSource
 
-	// Other cases,
 	// Get email from tokeninfo of ADC
 	oauth2Svc, err := goauth2.NewService(ctx, option.WithTokenSource(ts))
 	if err != nil {
