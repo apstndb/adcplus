@@ -62,17 +62,17 @@ func signJwtHelper(ctx context.Context, claimsJson string, kid string, s Signer)
 
 func (s *appengineSigner) ServiceAccount(ctx context.Context) string {
 	email, err := appengine.ServiceAccount(ctx)
-	if err != nil{
+	if err != nil {
 		return ""
 	}
 	return email
 }
 
-func (s *appengineSigner) SignBlob(ctx context.Context, b[]byte) (string, []byte, error) {
-		return appengine.SignBytes(ctx, b)
+func (s *appengineSigner) SignBlob(ctx context.Context, b []byte) (string, []byte, error) {
+	return appengine.SignBytes(ctx, b)
 }
 
-func AppEngineSigner() (Signer, error){
+func AppEngineSigner() (Signer, error) {
 	return &appengineSigner{}, nil
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -19,7 +20,7 @@ func main() {
 
 func _main() error {
 	input := flag.String("input", "", "")
-	output := flag.String("output","" , "")
+	output := flag.String("output", "", "")
 	_ = output
 	flag.Parse()
 
@@ -39,7 +40,7 @@ func _main() error {
 
 	var writer io.Writer
 	if *output != "" {
-		file, err := os.Create(*input, )
+		file, err := os.Create(*input)
 		if err != nil {
 			return err
 		}
@@ -62,6 +63,6 @@ func _main() error {
 	if err != nil {
 		return err
 	}
-	writer.Write([]byte(jwt))
+	fmt.Fprintln(writer, jwt)
 	return nil
 }

@@ -19,11 +19,12 @@ const (
 	serviceAccountKey  = "service_account"
 	userCredentialsKey = "authorized_user"
 	externalAccountKey = "external_account"
+	computeCredential  = "compute"
 )
 
 type smartSignerConfig struct {
-	targetPrincipal string
-	delegates       []string
+	targetPrincipal       string
+	delegates             []string
 	enableAppengineSigner bool
 }
 
@@ -92,30 +93,26 @@ func SmartSigner(ctx context.Context, options ...Option) (Signer, error) {
 		return IamCredentialsSigner(config.targetPrincipal, config.delegates, cred.TokenSource)
 	}
 
-	if len(cred.JSON) != 0 {
-		t, err := credentialType(cred.JSON)
-		if err != nil {
-			return nil, err
-		}
+	credType, err := inferADCCredentialType(cred)
+	if err != nil {
+		return nil, err
+	}
 
-		switch t {
-		case userCredentialsKey:
-			return nil, fmt.Errorf("authorized_user is unsupported so set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials")
-		case serviceAccountKey:
-			return ServiceAccountSigner(cred.JSON)
-		case externalAccountKey:
-			fallthrough
-		default:
-			// fallthrough to IAM Credentials
-		}
-	} else {
-		// App Engine or metadata server credentials are possible in this branch.
-		// appengine.SignBytes can sign blob without Token Creator roles in go111 runtime.
+	switch credType {
+	case userCredentialsKey:
+		return nil, fmt.Errorf("authorized_user is unsupported so set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials")
+	case serviceAccountKey:
+		return ServiceAccountSigner(cred.JSON)
+	case externalAccountKey:
+		// fallthrough to IAM Credentials
+	case computeCredential:
 		// Ensure initialization doesn't need an appengine context.
 		if config.enableAppengineSigner && isSupportedAppEngineRuntime() {
 			return AppEngineSigner()
 		}
-		// fall through to IAM Credentials because metadata server doesn't have SignBlob
+		// fallthrough to IAM Credentials because metadata server doesn't have SignBlob
+	default:
+		// fallthrough to IAM Credentials
 	}
 
 	ts := cred.TokenSource

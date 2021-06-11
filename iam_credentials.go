@@ -47,28 +47,28 @@ func (s *iamCredentialsSigner) ServiceAccount(context.Context) string {
 	return s.target
 }
 
-func (s *iamCredentialsSigner) SignBlob(ctx context.Context, b[]byte) (string, []byte, error) {
-		// Actually, WithTokenSource(nil) will be ignored so this condition doesn't make any changes.
-		var opts []option.ClientOption
-		if s.ts != nil {
-			opts = []option.ClientOption{option.WithTokenSource(s.ts)}
-		}
+func (s *iamCredentialsSigner) SignBlob(ctx context.Context, b []byte) (string, []byte, error) {
+	// Actually, WithTokenSource(nil) will be ignored so this condition doesn't make any changes.
+	var opts []option.ClientOption
+	if s.ts != nil {
+		opts = []option.ClientOption{option.WithTokenSource(s.ts)}
+	}
 
-		client, err := credentials.NewIamCredentialsClient(ctx, opts...)
-		if err != nil {
-			return "", nil, err
-		}
-		defer client.Close()
+	client, err := credentials.NewIamCredentialsClient(ctx, opts...)
+	if err != nil {
+		return "", nil, err
+	}
+	defer client.Close()
 
-		resp, err := client.SignBlob(ctx, &credentialspb.SignBlobRequest{
-			Name:      s.target,
-			Delegates: s.delegates,
-			Payload:   b,
-		})
-		if err != nil {
-			return "", nil, xerrors.Errorf("iamCredentialsSigner can't call SignBlob as %s: %w", s.target, err)
-		}
-		return resp.GetKeyId(), resp.GetSignedBlob(), nil
+	resp, err := client.SignBlob(ctx, &credentialspb.SignBlobRequest{
+		Name:      s.target,
+		Delegates: s.delegates,
+		Payload:   b,
+	})
+	if err != nil {
+		return "", nil, xerrors.Errorf("iamCredentialsSigner can't call SignBlob as %s: %w", s.target, err)
+	}
+	return resp.GetKeyId(), resp.GetSignedBlob(), nil
 }
 
 // IamCredentialsSigner makes new Signer.
