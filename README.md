@@ -7,7 +7,7 @@
 |credential/impersonate|yes|no|
 |---|---|---|
 |service_account|Credentials API|Sign by JSON key|
-|authorized_user|Credentials API|Credentials API as itself|
+|authorized_user|Credentials API|Not Supported|
 |external_account|Credentials API|Credentials API as itself|
 |compute_metadata|Credentials API|Credentials API as itself|
 |App Engine 1st gen(only if `WithExperimentalAppEngineSigner(true)`)|Credentials API|`appengine.SignBytes()`|
