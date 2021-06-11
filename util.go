@@ -32,7 +32,7 @@ func inferADCCredentialType(cred *google.Credentials) (string, error) {
 		return credentialTypeFromJSON(cred.JSON)
 	}
 	if metadata.OnGCE() {
-		return computeCredential, nil
+		return computeMetadataCredential, nil
 	}
 	return "", errors.New("unknown credential type")
 }

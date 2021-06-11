@@ -16,10 +16,10 @@ const impSaEnvName = "CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT"
 // All patterns are defined in
 // https://github.com/golang/oauth2/blob/f6687ab2804cbebdfdeef385bee94918b1ce83de/google/google.go#L93-L98
 const (
-	serviceAccountKey  = "service_account"
-	userCredentialsKey = "authorized_user"
-	externalAccountKey = "external_account"
-	computeCredential  = "compute"
+	serviceAccountKey         = "service_account"
+	userCredentialsKey        = "authorized_user"
+	externalAccountKey        = "external_account"
+	computeMetadataCredential = "compute_metadata"
 )
 
 type smartSignerConfig struct {
@@ -105,7 +105,7 @@ func SmartSigner(ctx context.Context, options ...Option) (Signer, error) {
 		return ServiceAccountSigner(cred.JSON)
 	case externalAccountKey:
 		// fallthrough to IAM Credentials
-	case computeCredential:
+	case computeMetadataCredential:
 		// Ensure initialization doesn't need an appengine context.
 		if config.enableAppengineSigner && isSupportedAppEngineRuntime() {
 			return AppEngineSigner()
