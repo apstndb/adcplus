@@ -2,6 +2,8 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/apstndb/signer.svg)](https://pkg.go.dev/github.com/apstndb/signer)
 
+**This package is EXPERIMENTAL**.
+
 ## Underlying signing method
 
 |credential/impersonate|yes|no|
