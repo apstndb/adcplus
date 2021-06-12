@@ -15,3 +15,4 @@
 |App Engine 1st gen(only if `WithExperimentalAppEngineSigner(true)`)|Credentials API|`appengine.SignBytes()`|
 
 * "Credentials API" is Service Account Credentials API ([`projects.serviceAccounts.signBlob`](https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/signBlob?hl=en), [`projects.serviceAccounts.signJwt`](https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/signJwt?hl=en))
+  * Need [Service Account Token Creator role(`roles/iam.serviceAccountTokenCreator`)](https://cloud.google.com/iam/docs/impersonating-service-accounts)
