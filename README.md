@@ -14,10 +14,11 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 
 ## Underlying method
 
+* Currently, it wraps another token sources so 
 * "Credentials API" is Service Account Credentials API ([`projects.serviceAccounts.signBlob`](https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/signBlob?hl=en), [`projects.serviceAccounts.signJwt`](https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/signJwt?hl=en))
   * Need [Service Account Token Creator role(`roles/iam.serviceAccountTokenCreator`)](https://cloud.google.com/iam/docs/impersonating-service-accounts)
 
-### signer.SmartSigner
+### [signer.SmartSigner](https://pkg.go.dev/github.com/apstndb/adcplus/signer#SmartSigner)
 
 |credential/impersonate|yes|no|
 |---|---|---|
@@ -27,7 +28,7 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 |compute_metadata|Credentials API|Credentials API as itself|
 |App Engine 1st gen(only if `WithExperimentalAppEngineSigner(true)`)|Credentials API|`appengine.SignBytes()`|
 
-### tokensource.SmartAccessTokenSource
+### [tokensource.SmartAccessTokenSource](https://pkg.go.dev/github.com/apstndb/adcplus/tokensource#SmartAccessTokenSource)
 
 |credential/impersonate|yes|no|
 |---|---|---|
@@ -36,13 +37,13 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 |external_account|Credentials API|ADC(STS)|
 |compute_metadata|Credentials API|ADC(token endpoint)|
 
-### tokensource.SmartIDTokenSource
+### [tokensource.SmartIDTokenSource](https://pkg.go.dev/github.com/apstndb/adcplus/tokensource#SmartIDTokenSource)
 
 |credential/impersonate|yes|no|
 |---|---|---|
 |authorized_user|Credentials API|Not Supported|
 |service_account|Credentials API|ADC(jwt-bearer flow)|
-|external_account|Credentials API|Not Supported(TODO)|
+|external_account|Credentials API|Not Supported(TODO: retrieve using STS)|
 |compute_metadata|Credentials API|ADC(identity endpoint)|
 
 ## TODO
@@ -50,3 +51,4 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 * Support to override underlying TokenSource.
   * `WithTokenSource()`
 * Support external_account in `tokensource.SmartIDTokenSource`
+* Re-implement underlying TokenSource to avoid ReuseTokenSource in default.
