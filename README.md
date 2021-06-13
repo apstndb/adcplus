@@ -50,5 +50,6 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 
 * Support to override underlying TokenSource.
   * `WithTokenSource()`
-* Support external_account in `tokensource.SmartIDTokenSource`
+* Support external_account in `tokensource.SmartIDTokenSource`.
 * Re-implement underlying TokenSource to avoid ReuseTokenSource in default.
+* Add tests.
