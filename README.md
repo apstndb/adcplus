@@ -1,10 +1,11 @@
-# signer
+# adcplus
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/apstndb/signer.svg)](https://pkg.go.dev/github.com/apstndb/signer)
+[![Go Reference](https://pkg.go.dev/badge/github.com/apstndb/adcplus.svg)](https://pkg.go.dev/github.com/apstndb/adcplus)
 
 **This package is EXPERIMENTAL**.
 
-## Underlying signing method
+## signer
+### Underlying signing method
 
 |credential/impersonate|yes|no|
 |---|---|---|

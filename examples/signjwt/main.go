@@ -9,7 +9,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/apstndb/signer"
+	"github.com/apstndb/adcplus/signer"
 )
 
 func main() {

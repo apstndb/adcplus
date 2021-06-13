@@ -6,11 +6,9 @@ import (
 
 	"cloud.google.com/go/iam/credentials/apiv1"
 	"golang.org/x/oauth2"
-	"google.golang.org/api/option"
-	credentialspb "google.golang.org/genproto/googleapis/iam/credentials/v1"
-
-	// Use xerrors.Errorf instead of fmt.Errorf because signer should support Go 1.11 if possible
 	"golang.org/x/xerrors"
+	"google.golang.org/api/option"
+	credentials2 "google.golang.org/genproto/googleapis/iam/credentials/v1"
 )
 
 type iamCredentialsSigner struct {
@@ -32,7 +30,7 @@ func (s *iamCredentialsSigner) SignJwt(ctx context.Context, c string) (string, e
 	}
 	defer client.Close()
 
-	resp, err := client.SignJwt(ctx, &credentialspb.SignJwtRequest{
+	resp, err := client.SignJwt(ctx, &credentials2.SignJwtRequest{
 		Name:      s.target,
 		Delegates: s.delegates,
 		Payload:   c,
@@ -60,7 +58,7 @@ func (s *iamCredentialsSigner) SignBlob(ctx context.Context, b []byte) (string, 
 	}
 	defer client.Close()
 
-	resp, err := client.SignBlob(ctx, &credentialspb.SignBlobRequest{
+	resp, err := client.SignBlob(ctx, &credentials2.SignBlobRequest{
 		Name:      s.target,
 		Delegates: s.delegates,
 		Payload:   b,
@@ -71,12 +69,12 @@ func (s *iamCredentialsSigner) SignBlob(ctx context.Context, b []byte) (string, 
 	return resp.GetKeyId(), resp.GetSignedBlob(), nil
 }
 
-// IamCredentialsSigner makes new Signer.
+// newIamCredentialsSigner makes new Signer.
 // targetPrincipal and delegates is passed to iamcredentials.SignBlob.
 // if ts is nil, ADC will be used.
-func IamCredentialsSigner(targetPrincipal string, delegates []string, ts oauth2.TokenSource) (Signer, error) {
+func newIamCredentialsSigner(targetPrincipal string, delegates []string, ts oauth2.TokenSource) (Signer, error) {
 	if targetPrincipal == "" {
-		return nil, errors.New("signer.IamCredentialsSigner requires non-empty targetPrincipal")
+		return nil, errors.New("signer.newIamCredentialsSigner requires non-empty targetPrincipal")
 	}
 	return &iamCredentialsSigner{
 		target:    targetPrincipal,
