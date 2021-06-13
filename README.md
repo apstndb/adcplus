@@ -44,7 +44,5 @@
 ## TODO
 
 * Support to override underlying TokenSource.
-  * `WithCredentialsFile()`
-  * `WithCredentialsJSON()`
   * `WithTokenSource()`
 * Support external_account in `tokensource.SmartIDTokenSource`

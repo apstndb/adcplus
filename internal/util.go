@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -24,6 +25,10 @@ const (
 	ComputeMetadataCredential = "compute_metadata"
 )
 
+// 	* Apply opts
+// 	* Detect misconfigurations.
+// 	* Populate AdcPlusConfig.TargetPrincipal and AdcPlusConfig.Delegates from `CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT` environment variable.
+// 	* Populate AdcPlusConfig.CredentialsJSON from AdcPlusConfig.CredentialsFile.
 func CalcAdcPlusConfig(opts ...adcplus.Option) (*config.AdcPlusConfig, error) {
 	var cfg config.AdcPlusConfig
 	for _, opt := range opts {
@@ -31,12 +36,21 @@ func CalcAdcPlusConfig(opts ...adcplus.Option) (*config.AdcPlusConfig, error) {
 			return nil, err
 		}
 	}
-
 	if cfg.TargetPrincipal == "" && len(cfg.Delegates) > 0 {
 		return nil, fmt.Errorf("targetPrincipal is set but delegates is not set: %s", cfg.Delegates)
 	}
 	if impSaVal := os.Getenv(impSaEnvName); cfg.TargetPrincipal == "" && impSaVal != "" {
 		cfg.TargetPrincipal, cfg.Delegates = ParseDelegateChain(impSaVal)
+	}
+	if len(cfg.CredentialsJSON) > 0 && cfg.CredentialsFile != "" {
+		return nil, fmt.Errorf(`WithCredentialsJSON and WithCredentialsFile are mutually exclusive`)
+	}
+	if cfg.CredentialsFile != "" {
+		j, err := ioutil.ReadFile(cfg.CredentialsFile)
+		if err != nil {
+			return nil, err
+		}
+		cfg.CredentialsJSON = j
 	}
 	return &cfg, nil
 }

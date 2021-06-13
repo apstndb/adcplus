@@ -5,4 +5,6 @@ type AdcPlusConfig struct {
 	Delegates             []string
 	EnableAppengineSigner bool
 	Scopes                []string
+	CredentialsFile       string
+	CredentialsJSON       []byte
 }

@@ -33,3 +33,15 @@ func WithScopes(scopes ...string) Option {
 		return nil
 	}
 }
+func WithCredentialsFile(filename string) Option {
+	return func(config *config.AdcPlusConfig) error {
+		config.CredentialsFile = filename
+		return nil
+	}
+}
+func WithCredentialsJSON(j []byte) Option {
+	return func(config *config.AdcPlusConfig) error {
+		config.CredentialsJSON = j
+		return nil
+	}
+}
