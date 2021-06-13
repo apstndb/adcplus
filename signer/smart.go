@@ -51,7 +51,7 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 		// fallthrough to IAM Credentials
 	case internal.ComputeMetadataCredential:
 		// Ensure initialization doesn't need an appengine context.
-		if config.EnableAppengineSigner && isSupportedAppEngineRuntime() {
+		if config.EnableAppEngineSigner && isSupportedAppEngineRuntime() {
 			return newAppEngineSigner()
 		}
 		// fallthrough to IAM Credentials because metadata server doesn't have SignBlob

@@ -8,7 +8,7 @@ type Option func(*config.AdcPlusConfig) error
 
 func WithExperimentalAppEngineSigner(enable bool) Option {
 	return func(config *config.AdcPlusConfig) error {
-		config.EnableAppengineSigner = enable
+		config.EnableAppEngineSigner = enable
 		return nil
 	}
 }

@@ -3,7 +3,7 @@ package config
 type AdcPlusConfig struct {
 	TargetPrincipal       string
 	Delegates             []string
-	EnableAppengineSigner bool
+	EnableAppEngineSigner bool
 	Scopes                []string
 	CredentialsFile       string
 	CredentialsJSON       []byte
