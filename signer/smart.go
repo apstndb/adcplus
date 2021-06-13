@@ -25,9 +25,14 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 		return nil, err
 	}
 
-	// Find credentials in ADC manner.
-	// See also https://google.aip.dev/auth/4110.
-	cred, err := google.FindDefaultCredentials(ctx)
+	var cred *google.Credentials
+	if len(config.CredentialsJSON) > 0 {
+		cred, err = google.CredentialsFromJSON(ctx, config.CredentialsJSON)
+	} else {
+		// Find credentials in ADC manner.
+		// See also https://google.aip.dev/auth/4110.
+		cred, err = google.FindDefaultCredentials(ctx)
+	}
 	if err != nil {
 		return nil, err
 	}
