@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 )
 
-func SignJwtHelper(ctx context.Context, claimsJson string, kid string, s Signer) (key string, signed string, err error) {
+func signJwtHelper(ctx context.Context, claimsJson string, kid string, s Signer) (key string, signed string, err error) {
 	var buf bytes.Buffer
 	type jwtHeader struct {
 		Alg string `json:"alg"`

@@ -20,7 +20,7 @@ type serviceAccountSigner struct {
 }
 
 func (s *serviceAccountSigner) SignJwt(ctx context.Context, claims string) (string, error) {
-	_, signed, err := SignJwtHelper(ctx, claims, s.keyId, s)
+	_, signed, err := signJwtHelper(ctx, claims, s.keyId, s)
 	return signed, err
 }
 

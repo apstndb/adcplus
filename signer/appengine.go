@@ -17,7 +17,7 @@ func (s *appengineSigner) SignJwt(ctx context.Context, c string) (string, error)
 	}
 	for _, certificate := range certificates {
 		kid := certificate.KeyName
-		key, signed, err := SignJwtHelper(ctx, c, kid, s)
+		key, signed, err := signJwtHelper(ctx, c, kid, s)
 		if err != nil {
 			return "", err
 		}
