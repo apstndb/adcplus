@@ -5,5 +5,4 @@ type AdcPlusConfig struct {
 	Delegates             []string
 	EnableAppengineSigner bool
 	Scopes                []string
-	ExcludeEmail          bool
 }
