@@ -10,7 +10,12 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
     * https://cloud.google.com/sdk/docs/properties?hl=en#setting_properties_via_environment_variables
 * Can override the impersonation target, the delegate chain and the source credential through [functional options](https://pkg.go.dev/github.com/apstndb/adcplus#Option).
 
-**This package is EXPERIMENTAL**.
+## Disclaimer
+
+**This package is EXPERIMENTAL.**
+* No responsibility.
+* May be broken.
+* Will do breaking changes.
 
 ## Underlying method
 
