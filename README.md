@@ -3,7 +3,12 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/apstndb/adcplus.svg)](https://pkg.go.dev/github.com/apstndb/adcplus)
 
 This package implements oauth2.TokenSource and signer which respects [ADC](https://google.aip.dev/auth/4110) with impersonation.
-It automatically uses `CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT` environment variable as the impersonation target and the delegation chain.
+
+* Automatically uses `CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT` environment variable as an impersonation target and a delegation chain.
+  * It respects same variable and syntax of gcloud.
+    * https://cloud.google.com/sdk/gcloud/reference/topic/configurations?hl=en#impersonate_service_account
+    * https://cloud.google.com/sdk/docs/properties?hl=en#setting_properties_via_environment_variables
+* Can override the impersonation target, the delegate chain and the source credential through [functional options](https://pkg.go.dev/github.com/apstndb/adcplus#Option).
 
 **This package is EXPERIMENTAL**.
 
