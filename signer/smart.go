@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/apstndb/adcplus"
 	"github.com/apstndb/adcplus/internal"
-	option2 "github.com/apstndb/adcplus/option"
 	"golang.org/x/oauth2/google"
 	goauth2 "google.golang.org/api/oauth2/v1"
-	"google.golang.org/api/option"
+	gapioption "google.golang.org/api/option"
 )
 
 // SmartSigner create signer for ADC with optional impersonation.
@@ -19,8 +19,8 @@ import (
 // If impersonation is not applied, all credentials except App Engine 1st gen(only Go 1.11) and Service Account Key need a Token Creator role to themselves.
 // 	* https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials?hl=en
 // 	* https://cloud.google.com/iam/docs/impersonating-service-accounts?hl=en
-func SmartSigner(ctx context.Context, options ...option2.Option) (Signer, error) {
-	config, err := internal.CalcSmartSignerConfig(options...)
+func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error) {
+	config, err := internal.CalcAdcPlusConfig(options...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func SmartSigner(ctx context.Context, options ...option2.Option) (Signer, error)
 	ts := cred.TokenSource
 
 	// Get email from tokeninfo of ADC
-	oauth2Svc, err := goauth2.NewService(ctx, option.WithTokenSource(ts))
+	oauth2Svc, err := goauth2.NewService(ctx, gapioption.WithTokenSource(ts))
 	if err != nil {
 		return nil, err
 	}

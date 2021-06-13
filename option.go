@@ -1,4 +1,4 @@
-package option
+package adcplus
 
 import (
 	"github.com/apstndb/adcplus/internal/config"
@@ -23,6 +23,13 @@ func WithTargetPrincipal(targetPrincipal string) Option {
 func WithDelegates(delegates ...string) Option {
 	return func(config *config.AdcPlusConfig) error {
 		config.Delegates = delegates
+		return nil
+	}
+}
+
+func WithScopes(scopes ...string) Option {
+	return func(config *config.AdcPlusConfig) error {
+		config.Scopes = scopes
 		return nil
 	}
 }

@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"cloud.google.com/go/compute/metadata"
+	"github.com/apstndb/adcplus"
 	"github.com/apstndb/adcplus/internal/config"
-	"github.com/apstndb/adcplus/option"
 	"golang.org/x/oauth2/google"
 )
 
@@ -24,21 +24,21 @@ const (
 	ComputeMetadataCredential = "compute_metadata"
 )
 
-func CalcSmartSignerConfig(opts ...option.Option) (*config.AdcPlusConfig, error) {
-	var config config.AdcPlusConfig
+func CalcAdcPlusConfig(opts ...adcplus.Option) (*config.AdcPlusConfig, error) {
+	var cfg config.AdcPlusConfig
 	for _, opt := range opts {
-		if err := opt(&config); err != nil {
+		if err := opt(&cfg); err != nil {
 			return nil, err
 		}
 	}
 
-	if config.TargetPrincipal == "" && len(config.Delegates) > 0 {
-		return nil, fmt.Errorf("targetPrincipal is set but delegates is not set: %s", config.Delegates)
+	if cfg.TargetPrincipal == "" && len(cfg.Delegates) > 0 {
+		return nil, fmt.Errorf("targetPrincipal is set but delegates is not set: %s", cfg.Delegates)
 	}
-	if impSaVal := os.Getenv(impSaEnvName); config.TargetPrincipal == "" && impSaVal != "" {
-		config.TargetPrincipal, config.Delegates = ParseDelegateChain(impSaVal)
+	if impSaVal := os.Getenv(impSaEnvName); cfg.TargetPrincipal == "" && impSaVal != "" {
+		cfg.TargetPrincipal, cfg.Delegates = ParseDelegateChain(impSaVal)
 	}
-	return &config, nil
+	return &cfg, nil
 }
 
 func CredentialTypeFromJSON(credentialJSON []byte) (string, error) {
