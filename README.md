@@ -14,7 +14,7 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 
 ## Underlying method
 
-* Currently, it wraps another token sources so 
+* Currently, external_account(STS) is not mentioned in [AIP-4110](https://google.aip.dev/auth/4110) because it is [removed when approval](https://github.com/aip-dev/google.aip.dev/pull/592) but it is supported in [`golang.org/x/oauth2/google`](https://github.com/golang/oauth2/pull/462) and it is [documented](https://cloud.google.com/docs/authentication/production?hl=en). I treat it as one of ADC credential.
 * "Credentials API" is Service Account Credentials API ([`projects.serviceAccounts.signBlob`](https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/signBlob?hl=en), [`projects.serviceAccounts.signJwt`](https://cloud.google.com/iam/docs/reference/credentials/rest/v1/projects.serviceAccounts/signJwt?hl=en))
   * Need [Service Account Token Creator role(`roles/iam.serviceAccountTokenCreator`)](https://cloud.google.com/iam/docs/impersonating-service-accounts)
 
