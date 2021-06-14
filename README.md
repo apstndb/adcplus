@@ -53,8 +53,11 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 
 ## TODO
 
+* Support [Self-signed JWT(AIP-4111)](https://google.aip.dev/auth/4111) for service_account in SmartAccessTokenSource.
+  * It may be better to wait [Self-signed JWT with scopes](https://github.com/aip-dev/google.aip.dev/pull/761) is supported in [JWTAccessTokenSourceFromJSON](https://pkg.go.dev/golang.org/x/oauth2/google#JWTAccessTokenSourceFromJSON)
 * Support to override underlying TokenSource.
   * `WithTokenSource()`
 * Support external_account in `tokensource.SmartIDTokenSource`.
 * Re-implement underlying TokenSource to avoid ReuseTokenSource in default.
 * Add tests.
+* Replace [signJwtHelper](https://github.com/apstndb/adcplus/blob/main/signer/jwt.go) with a reliable implementation.
