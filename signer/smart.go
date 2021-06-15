@@ -5,12 +5,16 @@ import (
 	"errors"
 	"fmt"
 
+	"cloud.google.com/go/compute/metadata"
 	"github.com/apstndb/adcplus"
 	"github.com/apstndb/adcplus/internal"
 	"golang.org/x/oauth2/google"
 	goauth2 "google.golang.org/api/oauth2/v1"
 	gapioption "google.golang.org/api/option"
 )
+
+const iamScope = "https://www.googleapis.com/auth/iam"
+const userinfoEmailScope = "https://www.googleapis.com/auth/userinfo.email"
 
 // SmartSigner create signer for ADC with optional impersonation.
 // Impersonation setting is supplied from below in descending order of priority.
@@ -27,11 +31,11 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 
 	var cred *google.Credentials
 	if len(config.CredentialsJSON) > 0 {
-		cred, err = google.CredentialsFromJSON(ctx, config.CredentialsJSON)
+		cred, err = google.CredentialsFromJSON(ctx, config.CredentialsJSON, iamScope, userinfoEmailScope)
 	} else {
 		// Find credentials in ADC manner.
 		// See also https://google.aip.dev/auth/4110.
-		cred, err = google.FindDefaultCredentials(ctx)
+		cred, err = google.FindDefaultCredentials(ctx, iamScope, userinfoEmailScope)
 	}
 	if err != nil {
 		return nil, err
@@ -47,6 +51,7 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 		return nil, err
 	}
 
+	var email string
 	switch credType {
 	case internal.UserCredentialsKey:
 		return nil, fmt.Errorf("authorized_user is unsupported so set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials")
@@ -59,6 +64,10 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 		if config.EnableAppEngineSigner && isSupportedAppEngineRuntime() {
 			return newAppEngineSigner()
 		}
+		email, err = metadata.Email("default")
+		if err != nil {
+			return nil, err
+		}
 		// fallthrough to IAM Credentials because metadata server doesn't have SignBlob
 	default:
 		// fallthrough to IAM Credentials
@@ -66,19 +75,22 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 
 	ts := cred.TokenSource
 
-	// Get email from tokeninfo of ADC
-	oauth2Svc, err := goauth2.NewService(ctx, gapioption.WithTokenSource(ts))
-	if err != nil {
-		return nil, err
-	}
-	resp, err := oauth2Svc.Tokeninfo().Do()
-	if err != nil {
-		return nil, err
-	}
+	if email == "" {
+		// Get email from tokeninfo of ADC
+		oauth2Svc, err := goauth2.NewService(ctx, gapioption.WithTokenSource(ts))
+		if err != nil {
+			return nil, err
+		}
+		resp, err := oauth2Svc.Tokeninfo().Do()
+		if err != nil {
+			return nil, err
+		}
 
-	if resp.Email == "" {
-		return nil, errors.New("signer.SmartSigner can't infer email")
+		if resp.Email == "" {
+			return nil, errors.New("signer.SmartSigner can't infer email")
+		}
+		email = resp.Email
 	}
 	// Use itself as target
-	return newIamCredentialsSigner(resp.Email, nil, ts)
+	return newIamCredentialsSigner(email, nil, ts)
 }

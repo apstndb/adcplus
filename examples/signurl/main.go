@@ -46,7 +46,7 @@ func _main() error {
 		GoogleAccessID: s.ServiceAccount(ctx),
 		SignBytes:      signer.SignWithoutKeyAdaptor(ctx, s),
 		Method:         *method,
-		Scheme: 		scheme,
+		Scheme:         scheme,
 		Expires:        time.Now().Add(*duration),
 	})
 	if err != nil {
