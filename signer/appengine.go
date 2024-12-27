@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"google.golang.org/appengine"
+	"google.golang.org/appengine/v2"
 )
 
 type appengineSigner struct{}
