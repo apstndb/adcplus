@@ -6,11 +6,12 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/compute/metadata"
-	"github.com/apstndb/adcplus"
-	"github.com/apstndb/adcplus/internal"
 	"golang.org/x/oauth2/google"
 	goauth2 "google.golang.org/api/oauth2/v1"
 	gapioption "google.golang.org/api/option"
+
+	"github.com/apstndb/adcplus"
+	"github.com/apstndb/adcplus/internal"
 )
 
 const iamScope = "https://www.googleapis.com/auth/iam"

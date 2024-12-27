@@ -9,9 +9,10 @@ import (
 	"strings"
 
 	"cloud.google.com/go/compute/metadata"
+	"golang.org/x/oauth2/google"
+
 	"github.com/apstndb/adcplus"
 	"github.com/apstndb/adcplus/internal/config"
-	"golang.org/x/oauth2/google"
 )
 
 const impSaEnvName = "CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT"

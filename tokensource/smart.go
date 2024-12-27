@@ -3,13 +3,14 @@ package tokensource
 import (
 	"context"
 
-	"github.com/apstndb/adcplus"
-	"github.com/apstndb/adcplus/internal"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/idtoken"
 	"google.golang.org/api/impersonate"
 	"google.golang.org/api/option"
+
+	"github.com/apstndb/adcplus"
+	"github.com/apstndb/adcplus/internal"
 )
 
 const cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
