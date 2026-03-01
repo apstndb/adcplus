@@ -11,7 +11,7 @@ func signJwtHelper(ctx context.Context, claimsJson string, kid string, s Signer)
 	var buf bytes.Buffer
 	type jwtHeader struct {
 		Alg string `json:"alg"`
-		Kid string `json:"kig"`
+		Kid string `json:"kid"`
 		Typ string `json:"typ"`
 	}
 	header, err := json.Marshal(jwtHeader{
