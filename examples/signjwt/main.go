@@ -40,7 +40,7 @@ func _main() error {
 
 	var writer io.Writer
 	if *output != "" {
-		file, err := os.Create(*input)
+		file, err := os.Create(*output)
 		if err != nil {
 			return err
 		}
