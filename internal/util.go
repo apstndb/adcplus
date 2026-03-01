@@ -38,7 +38,7 @@ func CalcAdcPlusConfig(opts ...adcplus.Option) (*config.AdcPlusConfig, error) {
 		}
 	}
 	if cfg.TargetPrincipal == "" && len(cfg.Delegates) > 0 {
-		return nil, fmt.Errorf("targetPrincipal is set but delegates is not set: %s", cfg.Delegates)
+		return nil, fmt.Errorf("delegates is set but targetPrincipal is not set: %s", cfg.Delegates)
 	}
 	if impSaVal := os.Getenv(impSaEnvName); cfg.TargetPrincipal == "" && impSaVal != "" {
 		cfg.TargetPrincipal, cfg.Delegates = ParseDelegateChain(impSaVal)
