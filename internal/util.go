@@ -41,7 +41,11 @@ func CalcAdcPlusConfig(opts ...adcplus.Option) (*config.AdcPlusConfig, error) {
 		return nil, fmt.Errorf("delegates is set but targetPrincipal is not set: %s", cfg.Delegates)
 	}
 	if impSaVal := os.Getenv(impSaEnvName); cfg.TargetPrincipal == "" && impSaVal != "" {
-		cfg.TargetPrincipal, cfg.Delegates = ParseDelegateChain(impSaVal)
+		var err error
+		cfg.TargetPrincipal, cfg.Delegates, err = ParseDelegateChain(impSaVal)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if len(cfg.CredentialsJSON) > 0 && cfg.CredentialsFile != "" {
 		return nil, fmt.Errorf(`WithCredentialsJSON and WithCredentialsFile are mutually exclusive`)
@@ -86,10 +90,10 @@ func InferADCCredentialType(cred *google.Credentials) (string, error) {
 
 // ParseDelegateChain split impersonate target principal and delegate chain.
 // s must be non-empty string.
-func ParseDelegateChain(s string) (targetPrincipal string, delegates []string) {
+func ParseDelegateChain(s string) (targetPrincipal string, delegates []string, err error) {
 	if s == "" {
-		panic("parseDelegateChain: empty argument")
+		return "", nil, errors.New("ParseDelegateChain: empty argument")
 	}
 	ss := strings.Split(s, ",")
-	return ss[len(ss)-1], ss[:len(ss)-1]
+	return ss[len(ss)-1], ss[:len(ss)-1], nil
 }
