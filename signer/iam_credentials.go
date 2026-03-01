@@ -36,7 +36,7 @@ func (s *iamCredentialsSigner) SignJwt(ctx context.Context, c string) (string, e
 		Payload:   c,
 	})
 	if err != nil {
-		return "", xerrors.Errorf("iamCredentialsSigner can't call SignBlob as %s: %w", s.target, err)
+		return "", xerrors.Errorf("iamCredentialsSigner can't call SignJwt as %s: %w", s.target, err)
 	}
 	return resp.GetSignedJwt(), nil
 }
