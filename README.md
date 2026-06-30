@@ -64,7 +64,7 @@ GCP integration tests (Workload Identity Federation from GitHub Actions, no serv
 |authorized_user|Credentials API|Not Supported (explicit error)|
 |service_account|Credentials API|ADC(jwt-bearer flow)|
 |gdch_service_account|Credentials API|ADC(jwt-bearer flow)|
-|external_account|Credentials API|Not Supported (explicit error; [STS support tracked](https://github.com/apstndb/adcplus/issues/3))|
+|external_account|Credentials API|ADC(STS + IAM generateIdToken)|
 |external_account_authorized_user|Credentials API|Not Supported (explicit error)|
 |impersonated_service_account|Credentials API|ADC(impersonated ID token flow)|
 |compute_metadata|Credentials API|ADC(identity endpoint)|
@@ -74,6 +74,5 @@ GCP integration tests (Workload Identity Federation from GitHub Actions, no serv
 
 * Support [Self-signed JWT(AIP-4111)](https://google.aip.dev/auth/4111) for service_account in SmartAccessTokenSource ([#5](https://github.com/apstndb/adcplus/issues/5)).
   * It may be better to wait [Self-signed JWT with scopes](https://github.com/aip-dev/google.aip.dev/pull/761) is supported in [JWTAccessTokenSourceFromJSON](https://pkg.go.dev/golang.org/x/oauth2/google#JWTAccessTokenSourceFromJSON)
-* Support external_account in `tokensource.SmartIDTokenSource` ([#3](https://github.com/apstndb/adcplus/issues/3)).
 * Re-implement underlying TokenSource to avoid ReuseTokenSource in default ([#6](https://github.com/apstndb/adcplus/issues/6)).
 * Replace [signJwtHelper](https://github.com/apstndb/adcplus/blob/main/signer/jwt.go) with a reliable implementation ([#7](https://github.com/apstndb/adcplus/issues/7)).

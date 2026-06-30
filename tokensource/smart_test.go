@@ -74,17 +74,6 @@ func TestSmartIDTokenSource_unsupportedCredentialTypes(t *testing.T) {
 			wantSubstr: "authorized_user is unsupported",
 		},
 		{
-			name: "external_account",
-			credential: `{
-				"type":"external_account",
-				"audience":"//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider",
-				"subject_token_type":"urn:ietf:params:oauth:token-type:jwt",
-				"token_url":"https://sts.googleapis.com/v1/token",
-				"credential_source":{"file":"/tmp/token"}
-			}`,
-			wantSubstr: "external_account is unsupported",
-		},
-		{
 			name: "external_account_authorized_user",
 			credential: `{
 				"type":"external_account_authorized_user",
@@ -107,5 +96,30 @@ func TestSmartIDTokenSource_unsupportedCredentialTypes(t *testing.T) {
 				t.Fatalf("error = %q, want substring %q", err.Error(), tt.wantSubstr)
 			}
 		})
+	}
+}
+
+func TestSmartIDTokenSource_externalAccount_delegatesToIDToken(t *testing.T) {
+	ctx := context.Background()
+	audience := "https://example.com"
+	credential := `{
+		"type":"external_account",
+		"audience":"//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider",
+		"subject_token_type":"urn:ietf:params:oauth:token-type:jwt",
+		"service_account_impersonation_url":"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/target@p.iam.gserviceaccount.com:generateAccessToken",
+		"token_url":"https://sts.googleapis.com/v1/token",
+		"credential_source":{"file":"/tmp/nonexistent-adcplus-wif-token"}
+	}`
+
+	ts, err := SmartIDTokenSource(ctx, audience, adcplus.WithCredentialsJSON([]byte(credential)))
+	if err != nil {
+		t.Fatalf("SmartIDTokenSource() error = %v", err)
+	}
+	_, err = ts.Token()
+	if err == nil {
+		t.Fatal("expected token fetch error, got nil")
+	}
+	if strings.Contains(err.Error(), "unsupported") {
+		t.Fatalf("Token() error = %q, should delegate to idtoken not reject credential type", err.Error())
 	}
 }

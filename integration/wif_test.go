@@ -15,7 +15,7 @@ import (
 	"github.com/apstndb/adcplus/tokensource"
 )
 
-// wifIDTokenAudience is the audience for SmartIDTokenSource impersonation tests.
+// wifIDTokenAudience is the audience for SmartIDTokenSource WIF integration tests.
 const wifIDTokenAudience = "https://adcplus-ci.test"
 
 func TestSmartAccessTokenSource_WIF(t *testing.T) {
@@ -104,6 +104,25 @@ func TestSmartSigner_WIF(t *testing.T) {
 		if part == "" {
 			t.Fatalf("SignJwt: segment %d is empty", i)
 		}
+	}
+}
+
+func TestSmartIDTokenSource_WIF(t *testing.T) {
+	if os.Getenv("GOOGLE_APPLICATION_CREDENTIALS") == "" {
+		t.Skip("GOOGLE_APPLICATION_CREDENTIALS not set; run under GitHub Actions WIF or local ADC")
+	}
+
+	ts, err := tokensource.SmartIDTokenSource(context.Background(), wifIDTokenAudience)
+	if err != nil {
+		t.Fatalf("SmartIDTokenSource: %v", err)
+	}
+
+	tok, err := ts.Token()
+	if err != nil {
+		t.Fatalf("Token: %v", err)
+	}
+	if tok.AccessToken == "" {
+		t.Fatal("expected non-empty ID token")
 	}
 }
 

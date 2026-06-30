@@ -80,8 +80,6 @@ func validateSmartIDTokenSourceCredentialType(credType string) error {
 	switch credType {
 	case internal.UserCredentialsKey:
 		return fmt.Errorf("authorized_user is unsupported for SmartIDTokenSource without impersonation; %s", smartIDTokenSourceImpersonationHint)
-	case internal.ExternalAccountKey:
-		return fmt.Errorf("external_account is unsupported for SmartIDTokenSource without impersonation; %s (STS support is tracked in https://github.com/apstndb/adcplus/issues/3)", smartIDTokenSourceImpersonationHint)
 	case internal.ExternalAccountAuthorizedUserKey:
 		return fmt.Errorf("external_account_authorized_user is unsupported for SmartIDTokenSource without impersonation; %s", smartIDTokenSourceImpersonationHint)
 	default:
