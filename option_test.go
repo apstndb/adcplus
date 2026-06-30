@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"golang.org/x/oauth2"
+
 	"github.com/apstndb/adcplus/internal/config"
 )
 
@@ -62,6 +64,18 @@ func TestWithCredentialsJSON(t *testing.T) {
 	}
 	if !reflect.DeepEqual(cfg.CredentialsJSON, j) {
 		t.Errorf("CredentialsJSON = %s, want %s", cfg.CredentialsJSON, j)
+	}
+}
+
+func TestWithTokenSource(t *testing.T) {
+	var cfg config.AdcPlusConfig
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "token"})
+	opt := WithTokenSource(ts)
+	if err := opt(&cfg); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.TokenSource != ts {
+		t.Error("TokenSource was not set")
 	}
 }
 

@@ -1,6 +1,8 @@
 package adcplus
 
 import (
+	"golang.org/x/oauth2"
+
 	"github.com/apstndb/adcplus/internal/config"
 )
 
@@ -53,6 +55,16 @@ func WithCredentialsFile(filename string) Option {
 func WithCredentialsJSON(j []byte) Option {
 	return func(config *config.AdcPlusConfig) error {
 		config.CredentialsJSON = j
+		return nil
+	}
+}
+
+// WithTokenSource returns Option which overrides the underlying oauth2.TokenSource.
+// When set, SmartAccessTokenSource and SmartIDTokenSource use this source instead of
+// deriving one from ADC credentials. SmartSigner uses it for IAM Credentials API auth.
+func WithTokenSource(ts oauth2.TokenSource) Option {
+	return func(config *config.AdcPlusConfig) error {
+		config.TokenSource = ts
 		return nil
 	}
 }

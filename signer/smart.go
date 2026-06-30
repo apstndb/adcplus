@@ -42,9 +42,14 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 		return nil, err
 	}
 
+	ts := cred.TokenSource
+	if config.TokenSource != nil {
+		ts = config.TokenSource
+	}
+
 	// If targetPrincipal is populated, use ADC with impersonation
 	if config.TargetPrincipal != "" {
-		return newIamCredentialsSigner(config.TargetPrincipal, config.Delegates, cred.TokenSource)
+		return newIamCredentialsSigner(config.TargetPrincipal, config.Delegates, ts)
 	}
 
 	credType, err := internal.InferADCCredentialType(cred)
@@ -77,8 +82,6 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 	default:
 		return nil, fmt.Errorf("unsupported credential type %q for SmartSigner without impersonation", credType)
 	}
-
-	ts := cred.TokenSource
 
 	if email == "" {
 		// Get email from tokeninfo of ADC

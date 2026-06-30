@@ -61,10 +61,8 @@ Requires Go 1.24 or later (`golang.org/x/oauth2` v0.35.x). Go 1.25 is not requir
 
 ## TODO
 
-* Support [Self-signed JWT(AIP-4111)](https://google.aip.dev/auth/4111) for service_account in SmartAccessTokenSource.
+* Support [Self-signed JWT(AIP-4111)](https://google.aip.dev/auth/4111) for service_account in SmartAccessTokenSource ([#5](https://github.com/apstndb/adcplus/issues/5)).
   * It may be better to wait [Self-signed JWT with scopes](https://github.com/aip-dev/google.aip.dev/pull/761) is supported in [JWTAccessTokenSourceFromJSON](https://pkg.go.dev/golang.org/x/oauth2/google#JWTAccessTokenSourceFromJSON)
-* Support to override underlying TokenSource.
-  * `WithTokenSource()`
-* Support external_account in `tokensource.SmartIDTokenSource`.
-* Re-implement underlying TokenSource to avoid ReuseTokenSource in default.
-* Replace [signJwtHelper](https://github.com/apstndb/adcplus/blob/main/signer/jwt.go) with a reliable implementation.
+* Support external_account in `tokensource.SmartIDTokenSource` ([#3](https://github.com/apstndb/adcplus/issues/3)).
+* Re-implement underlying TokenSource to avoid ReuseTokenSource in default ([#6](https://github.com/apstndb/adcplus/issues/6)).
+* Replace [signJwtHelper](https://github.com/apstndb/adcplus/blob/main/signer/jwt.go) with a reliable implementation ([#7](https://github.com/apstndb/adcplus/issues/7)).

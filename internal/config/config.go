@@ -1,5 +1,7 @@
 package config
 
+import "golang.org/x/oauth2"
+
 type AdcPlusConfig struct {
 	TargetPrincipal       string
 	Delegates             []string
@@ -7,4 +9,5 @@ type AdcPlusConfig struct {
 	Scopes                []string
 	CredentialsFile       string
 	CredentialsJSON       []byte
+	TokenSource           oauth2.TokenSource
 }
