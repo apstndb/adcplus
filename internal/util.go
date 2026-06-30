@@ -24,6 +24,7 @@ const (
 	ExternalAccountKey                 = "external_account"
 	ExternalAccountAuthorizedUserKey   = "external_account_authorized_user"
 	ImpersonatedServiceAccountKey      = "impersonated_service_account"
+	GDCHServiceAccountKey              = "gdch_service_account"
 	ComputeMetadataCredential          = "compute_metadata"
 )
 

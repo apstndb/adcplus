@@ -7,10 +7,12 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"fmt"
 
-	"golang.org/x/oauth2/google"
+	"github.com/apstndb/adcplus/internal"
 )
 
 type serviceAccountSigner struct {
@@ -35,14 +37,25 @@ func (s serviceAccountSigner) SignBlob(_ context.Context, b []byte) (string, []b
 
 // newServiceAccountSigner returns Signer which can sign without any network access.
 func newServiceAccountSigner(jsonKey []byte) (Signer, error) {
-	// google.JWTConfigFromJSON is used to extract client_email, private_key, private_key_id
-	// because credentialFile struct is not exported.
-	cfg, err := google.JWTConfigFromJSON(jsonKey)
-	if err != nil {
+	var key struct {
+		Type         string `json:"type"`
+		ClientEmail  string `json:"client_email"`
+		PrivateKeyID string `json:"private_key_id"`
+		PrivateKey   string `json:"private_key"`
+	}
+	if err := json.Unmarshal(jsonKey, &key); err != nil {
 		return nil, err
 	}
+	switch key.Type {
+	case internal.ServiceAccountKey, internal.GDCHServiceAccountKey:
+	default:
+		return nil, fmt.Errorf("unsupported local signing credential type %q", key.Type)
+	}
+	if key.ClientEmail == "" || key.PrivateKey == "" {
+		return nil, errors.New("service account credentials require client_email and private_key")
+	}
 
-	block, _ := pem.Decode(cfg.PrivateKey)
+	block, _ := pem.Decode([]byte(key.PrivateKey))
 	if block == nil {
 		return nil, errors.New("failed to decode PEM private key")
 	}
@@ -54,5 +67,5 @@ func newServiceAccountSigner(jsonKey []byte) (Signer, error) {
 	if !ok {
 		return nil, errors.New("private key failed rsa.PrivateKey type assertion")
 	}
-	return &serviceAccountSigner{clientEmail: cfg.Email, rsaKey: rsaKey, keyId: cfg.PrivateKeyID}, nil
+	return &serviceAccountSigner{clientEmail: key.ClientEmail, rsaKey: rsaKey, keyId: key.PrivateKeyID}, nil
 }

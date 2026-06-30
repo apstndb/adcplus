@@ -87,6 +87,11 @@ func TestCredentialTypeFromJSON(t *testing.T) {
 			want:  "impersonated_service_account",
 		},
 		{
+			name:  "gdch_service_account",
+			input: []byte(`{"type":"gdch_service_account"}`),
+			want:  "gdch_service_account",
+		},
+		{
 			name:  "unknown type",
 			input: []byte(`{"type":"custom_type"}`),
 			want:  "custom_type",

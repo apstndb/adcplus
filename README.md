@@ -17,6 +17,8 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 * May be broken.
 * Will do breaking changes.
 
+Requires Go 1.24 or later (`golang.org/x/oauth2` v0.35.x). Go 1.25 is not required yet.
+
 ## Underlying method
 
 * Currently, external_account(STS) is not mentioned in [AIP-4110](https://google.aip.dev/auth/4110) because it is [removed when approval](https://github.com/aip-dev/google.aip.dev/pull/592) but it is supported in [`golang.org/x/oauth2/google`](https://github.com/golang/oauth2/pull/462) and it is [documented](https://cloud.google.com/docs/authentication/production?hl=en). I treat it as one of ADC credential.
@@ -29,6 +31,7 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 |---|---|---|
 |authorized_user|Credentials API|Not Supported|
 |service_account|Credentials API|Sign by JSON key|
+|gdch_service_account|Credentials API|Sign by JSON key|
 |external_account|Credentials API|Credentials API as itself|
 |external_account_authorized_user|Credentials API|Not Supported|
 |impersonated_service_account|Credentials API|IAM Credentials API using source credentials|
@@ -41,6 +44,7 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 |---|---|---|
 |authorized_user|Credentials API|ADC(refresh token flow)|
 |service_account|Credentials API|ADC(jwt-bearer token flow)|
+|gdch_service_account|Credentials API|ADC(jwt-bearer token flow)|
 |external_account|Credentials API|ADC(STS)|
 |external_account_authorized_user|Credentials API|ADC(STS)|
 |impersonated_service_account|Credentials API|ADC(impersonated token flow)|

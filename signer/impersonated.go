@@ -8,8 +8,6 @@ import (
 	"net/url"
 	"strings"
 
-	"golang.org/x/oauth2/google"
-
 	"github.com/apstndb/adcplus/internal"
 )
 
@@ -35,7 +33,7 @@ func signerFromImpersonatedServiceAccountJSON(ctx context.Context, credentialJSO
 		return nil, err
 	}
 
-	sourceCred, err := google.CredentialsFromJSON(ctx, parsed.SourceCredentials, iamScope, userinfoEmailScope)
+	sourceCred, err := internal.GoogleCredentialsFromJSON(ctx, parsed.SourceCredentials, iamScope, userinfoEmailScope)
 	if err != nil {
 		return nil, err
 	}

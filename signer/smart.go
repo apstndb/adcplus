@@ -32,7 +32,7 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 
 	var cred *google.Credentials
 	if len(config.CredentialsJSON) > 0 {
-		cred, err = google.CredentialsFromJSON(ctx, config.CredentialsJSON, iamScope, userinfoEmailScope)
+		cred, err = internal.GoogleCredentialsFromJSON(ctx, config.CredentialsJSON, iamScope, userinfoEmailScope)
 	} else {
 		// Find credentials in ADC manner.
 		// See also https://google.aip.dev/auth/4110.
@@ -58,7 +58,7 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 		return nil, fmt.Errorf("authorized_user is unsupported so set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials")
 	case internal.ExternalAccountAuthorizedUserKey:
 		return nil, fmt.Errorf("external_account_authorized_user is unsupported so set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials")
-	case internal.ServiceAccountKey:
+	case internal.ServiceAccountKey, internal.GDCHServiceAccountKey:
 		return newServiceAccountSigner(cred.JSON)
 	case internal.ImpersonatedServiceAccountKey:
 		return signerFromImpersonatedServiceAccountJSON(ctx, cred.JSON)

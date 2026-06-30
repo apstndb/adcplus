@@ -62,7 +62,7 @@ func SmartAccessTokenSource(ctx context.Context, options ...adcplus.Option) (oau
 	}
 
 	if len(config.CredentialsJSON) > 0 {
-		cred, err := google.CredentialsFromJSON(ctx, config.CredentialsJSON, config.Scopes...)
+		cred, err := internal.GoogleCredentialsFromJSON(ctx, config.CredentialsJSON, config.Scopes...)
 		if err != nil {
 			return nil, err
 		}
