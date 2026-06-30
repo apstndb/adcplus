@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -20,10 +19,12 @@ const impSaEnvName = "CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT"
 // All patterns are defined in
 // https://github.com/golang/oauth2/blob/f6687ab2804cbebdfdeef385bee94918b1ce83de/google/google.go#L93-L98
 const (
-	ServiceAccountKey         = "service_account"
-	UserCredentialsKey        = "authorized_user"
-	ExternalAccountKey        = "external_account"
-	ComputeMetadataCredential = "compute_metadata"
+	ServiceAccountKey                  = "service_account"
+	UserCredentialsKey                 = "authorized_user"
+	ExternalAccountKey                 = "external_account"
+	ExternalAccountAuthorizedUserKey   = "external_account_authorized_user"
+	ImpersonatedServiceAccountKey      = "impersonated_service_account"
+	ComputeMetadataCredential          = "compute_metadata"
 )
 
 // 	* Apply opts
@@ -51,7 +52,7 @@ func CalcAdcPlusConfig(opts ...adcplus.Option) (*config.AdcPlusConfig, error) {
 		return nil, fmt.Errorf(`WithCredentialsJSON and WithCredentialsFile are mutually exclusive`)
 	}
 	if cfg.CredentialsFile != "" {
-		j, err := ioutil.ReadFile(cfg.CredentialsFile)
+		j, err := os.ReadFile(cfg.CredentialsFile)
 		if err != nil {
 			return nil, err
 		}

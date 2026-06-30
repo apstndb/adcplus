@@ -56,8 +56,12 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 	switch credType {
 	case internal.UserCredentialsKey:
 		return nil, fmt.Errorf("authorized_user is unsupported so set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials")
+	case internal.ExternalAccountAuthorizedUserKey:
+		return nil, fmt.Errorf("external_account_authorized_user is unsupported so set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials")
 	case internal.ServiceAccountKey:
 		return newServiceAccountSigner(cred.JSON)
+	case internal.ImpersonatedServiceAccountKey:
+		return signerFromImpersonatedServiceAccountJSON(ctx, cred.JSON)
 	case internal.ExternalAccountKey:
 		// fallthrough to IAM Credentials
 	case internal.ComputeMetadataCredential:
@@ -71,7 +75,7 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 		}
 		// fallthrough to IAM Credentials because metadata server doesn't have SignBlob
 	default:
-		// fallthrough to IAM Credentials
+		return nil, fmt.Errorf("unsupported credential type %q for SmartSigner without impersonation", credType)
 	}
 
 	ts := cred.TokenSource

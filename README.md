@@ -30,6 +30,8 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 |authorized_user|Credentials API|Not Supported|
 |service_account|Credentials API|Sign by JSON key|
 |external_account|Credentials API|Credentials API as itself|
+|external_account_authorized_user|Credentials API|Not Supported|
+|impersonated_service_account|Credentials API|IAM Credentials API using source credentials|
 |compute_metadata|Credentials API|Credentials API as itself|
 |App Engine 1st gen(only if `WithExperimentalAppEngineSigner(true)`)|Credentials API|`appengine.SignBytes()`|
 
@@ -40,6 +42,8 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 |authorized_user|Credentials API|ADC(refresh token flow)|
 |service_account|Credentials API|ADC(jwt-bearer token flow)|
 |external_account|Credentials API|ADC(STS)|
+|external_account_authorized_user|Credentials API|ADC(STS)|
+|impersonated_service_account|Credentials API|ADC(impersonated token flow)|
 |compute_metadata|Credentials API|ADC(token endpoint)|
 
 ### [tokensource.SmartIDTokenSource](https://pkg.go.dev/github.com/apstndb/adcplus/tokensource#SmartIDTokenSource)
@@ -59,5 +63,4 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
   * `WithTokenSource()`
 * Support external_account in `tokensource.SmartIDTokenSource`.
 * Re-implement underlying TokenSource to avoid ReuseTokenSource in default.
-* Add tests.
 * Replace [signJwtHelper](https://github.com/apstndb/adcplus/blob/main/signer/jwt.go) with a reliable implementation.

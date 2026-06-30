@@ -3,10 +3,10 @@ package signer
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"cloud.google.com/go/iam/credentials/apiv1"
 	"golang.org/x/oauth2"
-	"golang.org/x/xerrors"
 	"google.golang.org/api/option"
 	credentials2 "google.golang.org/genproto/googleapis/iam/credentials/v1"
 )
@@ -31,12 +31,12 @@ func (s *iamCredentialsSigner) SignJwt(ctx context.Context, c string) (string, e
 	defer client.Close()
 
 	resp, err := client.SignJwt(ctx, &credentials2.SignJwtRequest{
-		Name:      s.target,
-		Delegates: s.delegates,
+		Name:      iamServiceAccountName(s.target),
+		Delegates: iamDelegates(s.delegates),
 		Payload:   c,
 	})
 	if err != nil {
-		return "", xerrors.Errorf("iamCredentialsSigner can't call SignJwt as %s: %w", s.target, err)
+		return "", fmt.Errorf("iamCredentialsSigner can't call SignJwt as %s: %w", s.target, err)
 	}
 	return resp.GetSignedJwt(), nil
 }
@@ -59,12 +59,12 @@ func (s *iamCredentialsSigner) SignBlob(ctx context.Context, b []byte) (string, 
 	defer client.Close()
 
 	resp, err := client.SignBlob(ctx, &credentials2.SignBlobRequest{
-		Name:      s.target,
-		Delegates: s.delegates,
+		Name:      iamServiceAccountName(s.target),
+		Delegates: iamDelegates(s.delegates),
 		Payload:   b,
 	})
 	if err != nil {
-		return "", nil, xerrors.Errorf("iamCredentialsSigner can't call SignBlob as %s: %w", s.target, err)
+		return "", nil, fmt.Errorf("iamCredentialsSigner can't call SignBlob as %s: %w", s.target, err)
 	}
 	return resp.GetKeyId(), resp.GetSignedBlob(), nil
 }

@@ -77,6 +77,21 @@ func TestCredentialTypeFromJSON(t *testing.T) {
 			want:  "external_account",
 		},
 		{
+			name:  "external_account_authorized_user",
+			input: []byte(`{"type":"external_account_authorized_user"}`),
+			want:  "external_account_authorized_user",
+		},
+		{
+			name:  "impersonated_service_account",
+			input: []byte(`{"type":"impersonated_service_account"}`),
+			want:  "impersonated_service_account",
+		},
+		{
+			name:  "unknown type",
+			input: []byte(`{"type":"custom_type"}`),
+			want:  "custom_type",
+		},
+		{
 			name:    "empty type",
 			input:   []byte(`{"type":""}`),
 			wantErr: true,

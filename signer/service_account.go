@@ -43,6 +43,9 @@ func newServiceAccountSigner(jsonKey []byte) (Signer, error) {
 	}
 
 	block, _ := pem.Decode(cfg.PrivateKey)
+	if block == nil {
+		return nil, errors.New("failed to decode PEM private key")
+	}
 	parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
