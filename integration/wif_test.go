@@ -4,9 +4,11 @@ package integration_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/apstndb/adcplus"
 	"github.com/apstndb/adcplus/signer"
@@ -85,7 +87,12 @@ func TestSmartSigner_WIF(t *testing.T) {
 		t.Fatal("expected non-empty signature from SignBlob")
 	}
 
-	jwt, err := s.SignJwt(ctx, `{"sub":"adcplus-wif-integration","iss":"`+email+`"}`)
+	now := time.Now()
+	payload := fmt.Sprintf(
+		`{"iss":%q,"sub":%q,"aud":%q,"iat":%d,"exp":%d}`,
+		email, email, wifIDTokenAudience, now.Unix(), now.Add(time.Hour).Unix(),
+	)
+	jwt, err := s.SignJwt(ctx, payload)
 	if err != nil {
 		t.Fatalf("SignJwt: %v", err)
 	}
