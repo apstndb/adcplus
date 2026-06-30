@@ -19,6 +19,7 @@ env:
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'apstndb-sandbox' }}
   GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER || 'projects/463253289144/locations/global/workloadIdentityPools/github/providers/github' }}
   GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT || 'adcplus-ci@apstndb-sandbox.iam.gserviceaccount.com' }}
+  ADCPLUS_IMPERSONATION_TARGET: ${{ vars.ADCPLUS_IMPERSONATION_TARGET || vars.GCP_SERVICE_ACCOUNT || 'adcplus-ci@apstndb-sandbox.iam.gserviceaccount.com' }}
 
 jobs:
   integration:
