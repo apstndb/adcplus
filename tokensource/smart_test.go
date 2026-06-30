@@ -2,6 +2,7 @@ package tokensource
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"golang.org/x/oauth2"
@@ -50,5 +51,61 @@ func TestSmartAccessTokenSource_withTokenSource(t *testing.T) {
 	}
 	if got.AccessToken != want.AccessToken {
 		t.Fatalf("AccessToken = %q, want %q", got.AccessToken, want.AccessToken)
+	}
+}
+
+func TestSmartIDTokenSource_unsupportedCredentialTypes(t *testing.T) {
+	ctx := context.Background()
+	audience := "https://example.com"
+
+	tests := []struct {
+		name       string
+		credential string
+		wantSubstr string
+	}{
+		{
+			name: "authorized_user",
+			credential: `{
+				"type":"authorized_user",
+				"client_id":"cid",
+				"client_secret":"secret",
+				"refresh_token":"token"
+			}`,
+			wantSubstr: "authorized_user is unsupported",
+		},
+		{
+			name: "external_account",
+			credential: `{
+				"type":"external_account",
+				"audience":"//iam.googleapis.com/projects/123/locations/global/workloadIdentityPools/pool/providers/provider",
+				"subject_token_type":"urn:ietf:params:oauth:token-type:jwt",
+				"token_url":"https://sts.googleapis.com/v1/token",
+				"credential_source":{"file":"/tmp/token"}
+			}`,
+			wantSubstr: "external_account is unsupported",
+		},
+		{
+			name: "external_account_authorized_user",
+			credential: `{
+				"type":"external_account_authorized_user",
+				"client_id":"cid",
+				"client_secret":"secret",
+				"refresh_token":"token",
+				"token_url":"https://example.com/token"
+			}`,
+			wantSubstr: "external_account_authorized_user is unsupported",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := SmartIDTokenSource(ctx, audience, adcplus.WithCredentialsJSON([]byte(tt.credential)))
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			if !strings.Contains(err.Error(), tt.wantSubstr) {
+				t.Fatalf("error = %q, want substring %q", err.Error(), tt.wantSubstr)
+			}
+		})
 	}
 }

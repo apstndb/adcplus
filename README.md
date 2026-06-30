@@ -29,11 +29,11 @@ Requires Go 1.24 or later (`golang.org/x/oauth2` v0.35.x). Go 1.25 is not requir
 
 |credential/impersonate|yes|no|
 |---|---|---|
-|authorized_user|Credentials API|Not Supported|
+|authorized_user|Credentials API|Not Supported (explicit error)|
 |service_account|Credentials API|Sign by JSON key|
 |gdch_service_account|Credentials API|Sign by JSON key|
 |external_account|Credentials API|Credentials API as itself|
-|external_account_authorized_user|Credentials API|Not Supported|
+|external_account_authorized_user|Credentials API|Not Supported (explicit error)|
 |impersonated_service_account|Credentials API|IAM Credentials API using source credentials|
 |compute_metadata|Credentials API|Credentials API as itself|
 |App Engine 1st gen(only if `WithExperimentalAppEngineSigner(true)`)|Credentials API|`appengine.SignBytes()`|
@@ -49,15 +49,20 @@ Requires Go 1.24 or later (`golang.org/x/oauth2` v0.35.x). Go 1.25 is not requir
 |external_account_authorized_user|Credentials API|ADC(STS)|
 |impersonated_service_account|Credentials API|ADC(impersonated token flow)|
 |compute_metadata|Credentials API|ADC(token endpoint)|
+|App Engine 1st gen|Credentials API|ADC(token endpoint)|
 
 ### [tokensource.SmartIDTokenSource](https://pkg.go.dev/github.com/apstndb/adcplus/tokensource#SmartIDTokenSource)
 
 |credential/impersonate|yes|no|
 |---|---|---|
-|authorized_user|Credentials API|Not Supported|
+|authorized_user|Credentials API|Not Supported (explicit error)|
 |service_account|Credentials API|ADC(jwt-bearer flow)|
-|external_account|Credentials API|Not Supported(TODO: retrieve using STS)|
+|gdch_service_account|Credentials API|ADC(jwt-bearer flow)|
+|external_account|Credentials API|Not Supported (explicit error; [STS support tracked](https://github.com/apstndb/adcplus/issues/3))|
+|external_account_authorized_user|Credentials API|Not Supported (explicit error)|
+|impersonated_service_account|Credentials API|ADC(impersonated ID token flow)|
 |compute_metadata|Credentials API|ADC(identity endpoint)|
+|App Engine 1st gen|Credentials API|ADC(identity endpoint)|
 
 ## TODO
 
