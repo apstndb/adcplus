@@ -30,8 +30,22 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 		return nil, err
 	}
 
-	if config.TargetPrincipal != "" && config.TokenSource != nil {
-		return newIamCredentialsSigner(config.TargetPrincipal, config.Delegates, config.TokenSource)
+	if config.TokenSource != nil {
+		if config.TargetPrincipal != "" {
+			return newIamCredentialsSigner(config.TargetPrincipal, config.Delegates, config.TokenSource)
+		}
+		oauth2Svc, err := goauth2.NewService(ctx, gapioption.WithTokenSource(config.TokenSource))
+		if err != nil {
+			return nil, err
+		}
+		resp, err := oauth2Svc.Tokeninfo().Do()
+		if err != nil {
+			return nil, err
+		}
+		if resp.Email == "" {
+			return nil, errors.New("signer.SmartSigner can't infer email from the provided TokenSource")
+		}
+		return newIamCredentialsSigner(resp.Email, nil, config.TokenSource)
 	}
 
 	var cred *google.Credentials
@@ -47,9 +61,6 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 	}
 
 	ts := cred.TokenSource
-	if config.TokenSource != nil {
-		ts = config.TokenSource
-	}
 
 	// If targetPrincipal is populated, use ADC with impersonation
 	if config.TargetPrincipal != "" {

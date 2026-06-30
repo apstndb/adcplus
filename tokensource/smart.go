@@ -16,6 +16,8 @@ import (
 
 const cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
 
+const smartIDTokenSourceImpersonationHint = "set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT, adcplus.WithTargetPrincipal (optionally with adcplus.WithDelegates), or use other credentials"
+
 // SmartIDTokenSource generate oauth2.TokenSource which generates ID token and supports CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT environment variable.
 func SmartIDTokenSource(ctx context.Context, audience string, options ...adcplus.Option) (oauth2.TokenSource, error) {
 	config, err := internal.CalcAdcPlusConfig(options...)
@@ -65,6 +67,9 @@ func SmartIDTokenSource(ctx context.Context, audience string, options ...adcplus
 		if err := validateSmartIDTokenSourceCredentialType(credType); err != nil {
 			return nil, err
 		}
+		// Reuse the ADC lookup for idtoken.NewTokenSource. When cred.JSON is empty
+		// (compute_metadata / App Engine ADC), idtoken still uses the metadata
+		// identity endpoint rather than the access-token TokenSource.
 		copts = append(copts, option.WithCredentials(cred))
 	}
 
@@ -74,11 +79,11 @@ func SmartIDTokenSource(ctx context.Context, audience string, options ...adcplus
 func validateSmartIDTokenSourceCredentialType(credType string) error {
 	switch credType {
 	case internal.UserCredentialsKey:
-		return fmt.Errorf("authorized_user is unsupported for SmartIDTokenSource without impersonation; set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials")
+		return fmt.Errorf("authorized_user is unsupported for SmartIDTokenSource without impersonation; %s", smartIDTokenSourceImpersonationHint)
 	case internal.ExternalAccountKey:
-		return fmt.Errorf("external_account is unsupported for SmartIDTokenSource without impersonation; set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials (STS support is tracked in https://github.com/apstndb/adcplus/issues/3)")
+		return fmt.Errorf("external_account is unsupported for SmartIDTokenSource without impersonation; %s (STS support is tracked in https://github.com/apstndb/adcplus/issues/3)", smartIDTokenSourceImpersonationHint)
 	case internal.ExternalAccountAuthorizedUserKey:
-		return fmt.Errorf("external_account_authorized_user is unsupported for SmartIDTokenSource without impersonation; set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials")
+		return fmt.Errorf("external_account_authorized_user is unsupported for SmartIDTokenSource without impersonation; %s", smartIDTokenSourceImpersonationHint)
 	default:
 		return nil
 	}
