@@ -2,6 +2,7 @@ package tokensource
 
 import (
 	"context"
+	"fmt"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -44,7 +45,43 @@ func SmartIDTokenSource(ctx context.Context, audience string, options ...adcplus
 		return config.TokenSource, nil
 	}
 
+	if len(config.CredentialsJSON) > 0 {
+		credType, err := internal.CredentialTypeFromJSON(config.CredentialsJSON)
+		if err != nil {
+			return nil, err
+		}
+		if err := validateSmartIDTokenSourceCredentialType(credType); err != nil {
+			return nil, err
+		}
+	} else {
+		cred, err := google.FindDefaultCredentials(ctx)
+		if err != nil {
+			return nil, err
+		}
+		credType, err := internal.InferADCCredentialType(cred)
+		if err != nil {
+			return nil, err
+		}
+		if err := validateSmartIDTokenSourceCredentialType(credType); err != nil {
+			return nil, err
+		}
+		copts = append(copts, option.WithCredentials(cred))
+	}
+
 	return idtoken.NewTokenSource(ctx, audience, copts...)
+}
+
+func validateSmartIDTokenSourceCredentialType(credType string) error {
+	switch credType {
+	case internal.UserCredentialsKey:
+		return fmt.Errorf("authorized_user is unsupported for SmartIDTokenSource without impersonation; set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials")
+	case internal.ExternalAccountKey:
+		return fmt.Errorf("external_account is unsupported for SmartIDTokenSource without impersonation; set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials (STS support is tracked in https://github.com/apstndb/adcplus/issues/3)")
+	case internal.ExternalAccountAuthorizedUserKey:
+		return fmt.Errorf("external_account_authorized_user is unsupported for SmartIDTokenSource without impersonation; set CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT or use other credentials")
+	default:
+		return nil
+	}
 }
 
 // SmartAccessTokenSource generate oauth2.TokenSource which generates access token and supports CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT environment variable.
