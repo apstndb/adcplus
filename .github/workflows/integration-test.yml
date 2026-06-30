@@ -1,0 +1,59 @@
+name: Integration Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/integration-test.yml'
+      - 'integration/**'
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'apstndb-sandbox' }}
+  GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER || 'projects/463253289144/locations/global/workloadIdentityPools/github/providers/github' }}
+  GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT || 'adcplus-ci@apstndb-sandbox.iam.gserviceaccount.com' }}
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - id: auth
+        name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+
+      - name: Verify ADC credential type
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+          path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+          if not path:
+              sys.exit("GOOGLE_APPLICATION_CREDENTIALS not set")
+          with open(path) as f:
+              cred = json.load(f)
+          print("credential type:", cred.get("type"))
+          if cred.get("type") != "external_account":
+              sys.exit(f"expected external_account, got {cred.get('type')!r}")
+          PY
+
+      - name: Run integration tests
+        run: go test -tags=integration -count=1 -v ./integration/...
+
+      - name: Run unit tests
+        run: go test ./...

@@ -19,6 +19,12 @@ This package implements oauth2.TokenSource and signer which respects [ADC](https
 
 Requires Go 1.24 or later (`golang.org/x/oauth2` v0.35.x). Go 1.25 is not required yet.
 
+## CI and GCP integration tests
+
+Unit tests run on every push/PR via [`.github/workflows/test.yml`](.github/workflows/test.yml).
+
+GCP integration tests (Workload Identity Federation from GitHub Actions, no service account JSON keys) are documented in [`docs/wif-setup.md`](docs/wif-setup.md). Provision IAM with [`infra/wif/`](infra/wif/) or [`scripts/setup-wif.sh`](scripts/setup-wif.sh), then run the [Integration Test](.github/workflows/integration-test.yml) workflow.
+
 ## Underlying method
 
 * Currently, external_account(STS) is not mentioned in [AIP-4110](https://google.aip.dev/auth/4110) because it is [removed when approval](https://github.com/aip-dev/google.aip.dev/pull/592) but it is supported in [`golang.org/x/oauth2/google`](https://github.com/golang/oauth2/pull/462) and it is [documented](https://cloud.google.com/docs/authentication/production?hl=en). I treat it as one of ADC credential.

@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars and adjust if needed.
+project_id = "apstndb-sandbox"
+
+# Reuse the shared apstndb GitHub WIF pool (already provisioned in apstndb-sandbox).
+workload_identity_pool_id     = "github"
+workload_identity_provider_id = "github"
+github_repository             = "apstndb/adcplus"
+
+# Optional: existing SA in the project used as an impersonation target in integration tests.
+# impersonation_target_service_account = "self-signable@apstndb-sandbox.iam.gserviceaccount.com"
