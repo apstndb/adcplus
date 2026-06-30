@@ -17,6 +17,24 @@ func (s staticAccessTokenSource) Token() (*oauth2.Token, error) {
 	return s.token, nil
 }
 
+func TestSmartIDTokenSource_withTokenSource(t *testing.T) {
+	ctx := context.Background()
+	want := &oauth2.Token{AccessToken: "override-id-token"}
+
+	ts, err := SmartIDTokenSource(ctx, "https://example.com", adcplus.WithTokenSource(staticAccessTokenSource{token: want}))
+	if err != nil {
+		t.Fatalf("SmartIDTokenSource() error = %v", err)
+	}
+
+	got, err := ts.Token()
+	if err != nil {
+		t.Fatalf("Token() error = %v", err)
+	}
+	if got.AccessToken != want.AccessToken {
+		t.Fatalf("AccessToken = %q, want %q", got.AccessToken, want.AccessToken)
+	}
+}
+
 func TestSmartAccessTokenSource_withTokenSource(t *testing.T) {
 	ctx := context.Background()
 	want := &oauth2.Token{AccessToken: "override-token"}

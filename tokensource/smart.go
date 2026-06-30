@@ -39,6 +39,11 @@ func SmartIDTokenSource(ctx context.Context, audience string, options ...adcplus
 		}
 		return impersonate.IDTokenSource(ctx, idCfg, copts...)
 	}
+
+	if config.TokenSource != nil {
+		return config.TokenSource, nil
+	}
+
 	return idtoken.NewTokenSource(ctx, audience, copts...)
 }
 

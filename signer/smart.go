@@ -30,6 +30,10 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 		return nil, err
 	}
 
+	if config.TargetPrincipal != "" && config.TokenSource != nil {
+		return newIamCredentialsSigner(config.TargetPrincipal, config.Delegates, config.TokenSource)
+	}
+
 	var cred *google.Credentials
 	if len(config.CredentialsJSON) > 0 {
 		cred, err = internal.GoogleCredentialsFromJSON(ctx, config.CredentialsJSON, iamScope, userinfoEmailScope)
