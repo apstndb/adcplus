@@ -30,6 +30,10 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 		return nil, err
 	}
 
+	if config.TargetPrincipal != "" && config.TokenSource != nil {
+		return newIamCredentialsSigner(config.TargetPrincipal, config.Delegates, config.TokenSource)
+	}
+
 	var cred *google.Credentials
 	if len(config.CredentialsJSON) > 0 {
 		cred, err = internal.GoogleCredentialsFromJSON(ctx, config.CredentialsJSON, iamScope, userinfoEmailScope)
@@ -42,9 +46,14 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 		return nil, err
 	}
 
+	ts := cred.TokenSource
+	if config.TokenSource != nil {
+		ts = config.TokenSource
+	}
+
 	// If targetPrincipal is populated, use ADC with impersonation
 	if config.TargetPrincipal != "" {
-		return newIamCredentialsSigner(config.TargetPrincipal, config.Delegates, cred.TokenSource)
+		return newIamCredentialsSigner(config.TargetPrincipal, config.Delegates, ts)
 	}
 
 	credType, err := internal.InferADCCredentialType(cred)
@@ -77,8 +86,6 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 	default:
 		return nil, fmt.Errorf("unsupported credential type %q for SmartSigner without impersonation", credType)
 	}
-
-	ts := cred.TokenSource
 
 	if email == "" {
 		// Get email from tokeninfo of ADC

@@ -23,7 +23,9 @@ func SmartIDTokenSource(ctx context.Context, audience string, options ...adcplus
 	}
 
 	var copts []option.ClientOption
-	if len(config.CredentialsJSON) > 0 {
+	if config.TokenSource != nil {
+		copts = []option.ClientOption{option.WithTokenSource(config.TokenSource)}
+	} else if len(config.CredentialsJSON) > 0 {
 		copts = []option.ClientOption{option.WithCredentialsJSON(config.CredentialsJSON)}
 	}
 
@@ -37,6 +39,11 @@ func SmartIDTokenSource(ctx context.Context, audience string, options ...adcplus
 		}
 		return impersonate.IDTokenSource(ctx, idCfg, copts...)
 	}
+
+	if config.TokenSource != nil {
+		return config.TokenSource, nil
+	}
+
 	return idtoken.NewTokenSource(ctx, audience, copts...)
 }
 
@@ -51,7 +58,9 @@ func SmartAccessTokenSource(ctx context.Context, options ...adcplus.Option) (oau
 	}
 	if config.TargetPrincipal != "" {
 		var copts []option.ClientOption
-		if len(config.CredentialsJSON) > 0 {
+		if config.TokenSource != nil {
+			copts = []option.ClientOption{option.WithTokenSource(config.TokenSource)}
+		} else if len(config.CredentialsJSON) > 0 {
 			copts = []option.ClientOption{option.WithCredentialsJSON(config.CredentialsJSON)}
 		}
 		return impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
@@ -59,6 +68,10 @@ func SmartAccessTokenSource(ctx context.Context, options ...adcplus.Option) (oau
 			Delegates:       config.Delegates,
 			Scopes:          config.Scopes,
 		}, copts...)
+	}
+
+	if config.TokenSource != nil {
+		return config.TokenSource, nil
 	}
 
 	if len(config.CredentialsJSON) > 0 {
