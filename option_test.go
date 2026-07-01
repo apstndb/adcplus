@@ -89,3 +89,14 @@ func TestWithExperimentalAppEngineSigner(t *testing.T) {
 		t.Error("EnableAppEngineSigner = false, want true")
 	}
 }
+
+func TestWithJWTAccessWithScope(t *testing.T) {
+	var cfg config.AdcPlusConfig
+	opt := WithJWTAccessWithScope(true)
+	if err := opt(&cfg); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !cfg.UseJWTAccessWithScope {
+		t.Error("UseJWTAccessWithScope = false, want true")
+	}
+}

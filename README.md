@@ -23,7 +23,7 @@ Requires Go 1.24 or later (`golang.org/x/oauth2` v0.35.x). Go 1.25 is not requir
 
 Unit tests run on every push/PR via [`.github/workflows/test.yml`](.github/workflows/test.yml).
 
-GCP integration tests (Workload Identity Federation from GitHub Actions, no service account JSON keys) are documented in [`docs/wif-setup.md`](docs/wif-setup.md). Provision IAM with [`infra/wif/`](infra/wif/) or [`scripts/setup-wif.sh`](scripts/setup-wif.sh), then run the [Integration Test](.github/workflows/integration-test.yml) workflow.
+GCP integration tests are documented in [`docs/wif-setup.md`](docs/wif-setup.md). Most tests use Workload Identity Federation from GitHub Actions without service account JSON keys; the AIP-4111 JWT access test reads a dedicated low-privilege key from Secret Manager at runtime. Provision IAM with [`infra/wif/`](infra/wif/) or [`scripts/setup-wif.sh`](scripts/setup-wif.sh), then run the [Integration Test](.github/workflows/integration-test.yml) workflow.
 
 ## Underlying method
 
@@ -49,13 +49,15 @@ GCP integration tests (Workload Identity Federation from GitHub Actions, no serv
 |credential/impersonate|yes|no|
 |---|---|---|
 |authorized_user|Credentials API|ADC(refresh token flow)|
-|service_account|Credentials API|ADC(jwt-bearer token flow)|
+|service_account|Credentials API|ADC(jwt-bearer token flow), or AIP-4111 self-signed JWT access token with explicit `WithJWTAccessWithScope(true)` and scopes|
 |gdch_service_account|Credentials API|ADC(jwt-bearer token flow)|
 |external_account|Credentials API|ADC(STS)|
 |external_account_authorized_user|Credentials API|ADC(STS)|
 |impersonated_service_account|Credentials API|ADC(impersonated token flow)|
 |compute_metadata|Credentials API|ADC(token endpoint)|
 |App Engine 1st gen|Credentials API|ADC(token endpoint)|
+
+`WithJWTAccessWithScope(true)` only applies to `service_account` JSON credentials provided by `WithCredentialsJSON` or `WithCredentialsFile`, with explicit scopes and without impersonation or `WithTokenSource`. Other credential sources keep the existing ADC behavior.
 
 ### [tokensource.SmartIDTokenSource](https://pkg.go.dev/github.com/apstndb/adcplus/tokensource#SmartIDTokenSource)
 
@@ -72,7 +74,5 @@ GCP integration tests (Workload Identity Federation from GitHub Actions, no serv
 
 ## TODO
 
-* Support [Self-signed JWT(AIP-4111)](https://google.aip.dev/auth/4111) for service_account in SmartAccessTokenSource ([#5](https://github.com/apstndb/adcplus/issues/5)).
-  * It may be better to wait [Self-signed JWT with scopes](https://github.com/aip-dev/google.aip.dev/pull/761) is supported in [JWTAccessTokenSourceFromJSON](https://pkg.go.dev/golang.org/x/oauth2/google#JWTAccessTokenSourceFromJSON)
 * Re-implement underlying TokenSource to avoid ReuseTokenSource in default ([#6](https://github.com/apstndb/adcplus/issues/6)).
 * Replace [signJwtHelper](https://github.com/apstndb/adcplus/blob/main/signer/jwt.go) with a reliable implementation ([#7](https://github.com/apstndb/adcplus/issues/7)).
