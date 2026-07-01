@@ -110,7 +110,7 @@ func aip4111ServiceAccountKeyJSON(t *testing.T) []byte {
 	}
 	keyJSON, err := os.ReadFile(keyFile)
 	if err != nil {
-		t.Fatalf("ReadFile(%s) error = %v", aip4111ServiceAccountKeyFileEnv, err)
+		t.Fatalf("ReadFile(%s) error = %v", keyFile, err)
 	}
 	if len(keyJSON) == 0 {
 		t.Fatalf("%s points to an empty file", aip4111ServiceAccountKeyFileEnv)
