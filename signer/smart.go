@@ -2,10 +2,11 @@ package signer
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"strings"
 
 	"cloud.google.com/go/compute/metadata"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	goauth2 "google.golang.org/api/oauth2/v1"
 	gapioption "google.golang.org/api/option"
@@ -17,13 +18,16 @@ import (
 const iamScope = "https://www.googleapis.com/auth/iam"
 const userinfoEmailScope = "https://www.googleapis.com/auth/userinfo.email"
 
+var lookupTokeninfoEmail = tokeninfoEmail
+
 // SmartSigner create signer for ADC with optional impersonation.
 // Impersonation setting is supplied from below in descending order of priority.
-// 	1. options e.g. signer.WithTargetPrincipal, signer.WithDelegates
-// 	2. `CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT` environment variable
+//  1. options e.g. signer.WithTargetPrincipal, signer.WithDelegates
+//  2. `CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT` environment variable
+//
 // If impersonation is not applied, all credentials except App Engine 1st gen(only Go 1.11) and Service Account Key need a Token Creator role to themselves.
-// 	* https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials?hl=en
-// 	* https://cloud.google.com/iam/docs/impersonating-service-accounts?hl=en
+//   - https://cloud.google.com/iam/docs/creating-short-lived-service-account-credentials?hl=en
+//   - https://cloud.google.com/iam/docs/impersonating-service-accounts?hl=en
 func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error) {
 	config, err := internal.CalcAdcPlusConfig(options...)
 	if err != nil {
@@ -34,18 +38,11 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 		if config.TargetPrincipal != "" {
 			return newIamCredentialsSigner(config.TargetPrincipal, config.Delegates, config.TokenSource)
 		}
-		oauth2Svc, err := goauth2.NewService(ctx, gapioption.WithTokenSource(config.TokenSource))
+		email, err := inferServiceAccountEmailFromTokenSource(ctx, config.TokenSource, "the provided TokenSource")
 		if err != nil {
 			return nil, err
 		}
-		resp, err := oauth2Svc.Tokeninfo().Do()
-		if err != nil {
-			return nil, err
-		}
-		if resp.Email == "" {
-			return nil, errors.New("signer.SmartSigner can't infer email from the provided TokenSource")
-		}
-		return newIamCredentialsSigner(resp.Email, nil, config.TokenSource)
+		return newIamCredentialsSigner(email, nil, config.TokenSource)
 	}
 
 	var cred *google.Credentials
@@ -99,21 +96,47 @@ func SmartSigner(ctx context.Context, options ...adcplus.Option) (Signer, error)
 	}
 
 	if email == "" {
-		// Get email from tokeninfo of ADC
-		oauth2Svc, err := goauth2.NewService(ctx, gapioption.WithTokenSource(ts))
+		// Get email from tokeninfo of ADC.
+		email, err = inferServiceAccountEmailFromTokenSource(ctx, ts, "ADC TokenSource")
 		if err != nil {
 			return nil, err
 		}
-		resp, err := oauth2Svc.Tokeninfo().Do()
-		if err != nil {
-			return nil, err
-		}
-
-		if resp.Email == "" {
-			return nil, errors.New("signer.SmartSigner can't infer email")
-		}
-		email = resp.Email
 	}
 	// Use itself as target
 	return newIamCredentialsSigner(email, nil, ts)
+}
+
+func inferServiceAccountEmailFromTokenSource(ctx context.Context, ts oauth2.TokenSource, sourceDescription string) (string, error) {
+	email, err := lookupTokeninfoEmail(ctx, ts)
+	if err != nil {
+		return "", err
+	}
+	if email == "" {
+		return "", fmt.Errorf("signer.SmartSigner can't infer email from %s", sourceDescription)
+	}
+	if !isServiceAccountEmail(email) {
+		return "", fmt.Errorf(
+			"signer.SmartSigner inferred non-service-account email %q from %s; set adcplus.WithTargetPrincipal to the service account to sign as",
+			email,
+			sourceDescription,
+		)
+	}
+	return email, nil
+}
+
+func tokeninfoEmail(ctx context.Context, ts oauth2.TokenSource) (string, error) {
+	oauth2Svc, err := goauth2.NewService(ctx, gapioption.WithTokenSource(ts))
+	if err != nil {
+		return "", err
+	}
+	resp, err := oauth2Svc.Tokeninfo().Do()
+	if err != nil {
+		return "", err
+	}
+	return resp.Email, nil
+}
+
+func isServiceAccountEmail(email string) bool {
+	email = strings.ToLower(strings.TrimSpace(email))
+	return strings.Contains(email, "@") && strings.HasSuffix(email, ".gserviceaccount.com")
 }
