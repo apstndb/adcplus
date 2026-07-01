@@ -1,7 +1,6 @@
 package tokensource
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -10,6 +9,7 @@ import (
 	"encoding/pem"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -94,7 +94,7 @@ func oauthTokenServer(t *testing.T, token string) (*httptest.Server, *bool) {
 }
 
 func TestSmartIDTokenSource_withTokenSource(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	want := &oauth2.Token{AccessToken: "override-id-token"}
 
 	ts, err := SmartIDTokenSource(ctx, "https://example.com", adcplus.WithTokenSource(staticAccessTokenSource{token: want}))
@@ -112,7 +112,7 @@ func TestSmartIDTokenSource_withTokenSource(t *testing.T) {
 }
 
 func TestSmartAccessTokenSource_withTokenSource(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	want := &oauth2.Token{AccessToken: "override-token"}
 
 	ts, err := SmartAccessTokenSource(ctx, adcplus.WithTokenSource(staticAccessTokenSource{token: want}))
@@ -130,7 +130,7 @@ func TestSmartAccessTokenSource_withTokenSource(t *testing.T) {
 }
 
 func TestSmartAccessTokenSource_jwtAccessWithScope(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Errorf("unexpected token endpoint request: %s %s", r.Method, r.URL.String())
 	}))
@@ -170,8 +170,40 @@ func TestSmartAccessTokenSource_jwtAccessWithScope(t *testing.T) {
 	}
 }
 
+func TestSmartAccessTokenSource_jwtAccessWithScope_credentialsFile(t *testing.T) {
+	ctx := t.Context()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Errorf("unexpected token endpoint request: %s %s", r.Method, r.URL.String())
+	}))
+	defer server.Close()
+
+	credentialsFile := t.TempDir() + "/service-account.json"
+	if err := os.WriteFile(credentialsFile, testServiceAccountJSON(t, server.URL), 0o600); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	ts, err := SmartAccessTokenSource(
+		ctx,
+		adcplus.WithCredentialsFile(credentialsFile),
+		adcplus.WithScopes("scope1"),
+		adcplus.WithJWTAccessWithScope(true),
+	)
+	if err != nil {
+		t.Fatalf("SmartAccessTokenSource() error = %v", err)
+	}
+
+	tok, err := ts.Token()
+	if err != nil {
+		t.Fatalf("Token() error = %v", err)
+	}
+	claims := decodeJWTClaims(t, tok.AccessToken)
+	if claims["scope"] != "scope1" {
+		t.Errorf("scope = %v, want %q", claims["scope"], "scope1")
+	}
+}
+
 func TestSmartAccessTokenSource_jwtAccessWithScope_nonServiceAccount(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	credential := []byte(`{
 		"type":"authorized_user",
 		"client_id":"cid",
@@ -194,7 +226,7 @@ func TestSmartAccessTokenSource_jwtAccessWithScope_nonServiceAccount(t *testing.
 }
 
 func TestSmartAccessTokenSource_noJWTAccessOptInUsesOAuthTokenSource(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	server, called := oauthTokenServer(t, "oauth-token")
 	defer server.Close()
 
@@ -220,7 +252,7 @@ func TestSmartAccessTokenSource_noJWTAccessOptInUsesOAuthTokenSource(t *testing.
 }
 
 func TestSmartAccessTokenSource_jwtAccessWithScope_skippedRoutes(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 
 	t.Run("WithTokenSource overrides JWT access", func(t *testing.T) {
 		want := &oauth2.Token{AccessToken: "override-token"}
@@ -283,7 +315,7 @@ func TestSmartAccessTokenSource_jwtAccessWithScope_skippedRoutes(t *testing.T) {
 }
 
 func TestSmartIDTokenSource_unsupportedCredentialTypes(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	audience := "https://example.com"
 
 	tests := []struct {
@@ -328,7 +360,7 @@ func TestSmartIDTokenSource_unsupportedCredentialTypes(t *testing.T) {
 }
 
 func TestSmartIDTokenSource_externalAccount_delegatesToIDToken(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	audience := "https://example.com"
 	credential := `{
 		"type":"external_account",

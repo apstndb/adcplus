@@ -137,6 +137,7 @@ func jwtAccessTokenSourceWithScope(cfg *config.AdcPlusConfig, explicitScopes boo
 		return nil, false, nil
 	}
 
+	// CalcAdcPlusConfig materializes WithCredentialsFile into CredentialsJSON.
 	credType, err := internal.CredentialTypeFromJSON(cfg.CredentialsJSON)
 	if err != nil {
 		return nil, false, err

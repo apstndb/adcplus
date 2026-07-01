@@ -32,7 +32,7 @@ func TestSmartAccessTokenSource_AIP4111JWTAccessWithScope_serviceUsage(t *testin
 		t.Skipf("%s or %s not set", aip4111ServiceAccountKeyJSONEnv, aip4111ServiceAccountKeyFileEnv)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 	defer cancel()
 
 	ts, err := tokensource.SmartAccessTokenSource(
