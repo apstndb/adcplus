@@ -12,6 +12,7 @@ import (
 
 	"github.com/apstndb/adcplus"
 	"github.com/apstndb/adcplus/internal"
+	"github.com/apstndb/adcplus/internal/config"
 )
 
 const cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
@@ -93,6 +94,7 @@ func SmartAccessTokenSource(ctx context.Context, options ...adcplus.Option) (oau
 	if err != nil {
 		return nil, err
 	}
+	explicitScopes := len(config.Scopes) > 0
 	if len(config.Scopes) == 0 {
 		config.Scopes = []string{cloudPlatformScope}
 	}
@@ -114,6 +116,12 @@ func SmartAccessTokenSource(ctx context.Context, options ...adcplus.Option) (oau
 		return config.TokenSource, nil
 	}
 
+	if ts, ok, err := jwtAccessTokenSourceWithScope(config, explicitScopes); err != nil {
+		return nil, err
+	} else if ok {
+		return ts, nil
+	}
+
 	if len(config.CredentialsJSON) > 0 {
 		cred, err := internal.GoogleCredentialsFromJSON(ctx, config.CredentialsJSON, config.Scopes...)
 		if err != nil {
@@ -122,4 +130,25 @@ func SmartAccessTokenSource(ctx context.Context, options ...adcplus.Option) (oau
 		return cred.TokenSource, nil
 	}
 	return google.DefaultTokenSource(ctx, config.Scopes...)
+}
+
+func jwtAccessTokenSourceWithScope(cfg *config.AdcPlusConfig, explicitScopes bool) (oauth2.TokenSource, bool, error) {
+	if !cfg.UseJWTAccessWithScope || !explicitScopes || len(cfg.CredentialsJSON) == 0 {
+		return nil, false, nil
+	}
+
+	// CalcAdcPlusConfig materializes WithCredentialsFile into CredentialsJSON.
+	credType, err := internal.CredentialTypeFromJSON(cfg.CredentialsJSON)
+	if err != nil {
+		return nil, false, err
+	}
+	if credType != internal.ServiceAccountKey {
+		return nil, false, fmt.Errorf("WithJWTAccessWithScope requires service_account credentials JSON, got %s", credType)
+	}
+
+	ts, err := google.JWTAccessTokenSourceWithScope(cfg.CredentialsJSON, cfg.Scopes...)
+	if err != nil {
+		return nil, false, err
+	}
+	return ts, true, nil
 }

@@ -1,6 +1,7 @@
 # Workload Identity Federation for GitHub Actions
 
 This document describes how [adcplus](https://github.com/apstndb/adcplus) authenticates to GCP from GitHub Actions without storing service account JSON keys in the repository.
+Most tests use WIF directly. The AIP-4111 self-signed JWT access token test uses a persistent, low-privilege service account key stored only in Secret Manager.
 
 ## Architecture
 
@@ -10,11 +11,13 @@ sequenceDiagram
   participant OIDC as token.actions.githubusercontent.com
   participant WIF as GCP WIF Pool (github)
   participant SA as adcplus-ci SA
+  participant SM as Secret Manager
   participant API as IAM Credentials API
 
   GHA->>OIDC: Request OIDC token (id-token: write)
   GHA->>WIF: Exchange OIDC token (google-github-actions/auth)
   WIF->>SA: Short-lived federated credential
+  GHA->>SM: Read AIP-4111 key secret (secret-level IAM)
   GHA->>API: adcplus integration tests (external_account ADC)
   Note over GHA,API: Optional impersonation via CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT
 ```
@@ -128,7 +131,7 @@ Set `impersonation_target_service_account` in `terraform.tfvars` to manage this 
 
 ## GitHub configuration
 
-**No JSON key secrets are required.** WIF uses the repository's OIDC token.
+WIF uses the repository's OIDC token for normal integration tests. The AIP-4111 test also reads a dedicated service account key from Secret Manager at workflow runtime; the key is not stored in GitHub secrets or in the repository.
 
 ### Repository variables (optional)
 
@@ -139,6 +142,8 @@ The workflow [`.github/workflows/integration-test.yml`](../.github/workflows/int
 | `GCP_PROJECT_ID` | `apstndb-sandbox` | Target GCP project |
 | `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/463253289144/locations/global/workloadIdentityPools/github/providers/github` | Full provider resource name |
 | `GCP_SERVICE_ACCOUNT` | `adcplus-ci@apstndb-sandbox.iam.gserviceaccount.com` | SA to impersonate via WIF |
+| `ADCPLUS_AIP4111_PROJECT_ID` | `apstndb-sandbox` | Project whose Service Usage API is called by the AIP-4111 JWT test |
+| `ADCPLUS_AIP4111_SECRET` | `adcplus-aip4111-service-account-key` | Secret Manager secret containing the dedicated AIP-4111 service account key |
 
 After `terraform apply`, run `terraform output github_actions_auth_snippet` for exact values if the project number differs.
 
@@ -163,12 +168,39 @@ Local run (with user ADC or exported WIF credentials):
 go test -tags=integration ./integration/...
 ```
 
+For the AIP-4111 key-backed test, fetch the key into a restrictive temporary file and remove it after the run:
+
+```bash
+tmp="$(mktemp)"
+chmod 600 "$tmp"
+gcloud secrets versions access latest \
+  --project=apstndb-sandbox \
+  --secret=adcplus-aip4111-service-account-key > "$tmp"
+ADCPLUS_AIP4111_SERVICE_ACCOUNT_KEY_FILE="$tmp" \
+  ADCPLUS_AIP4111_PROJECT_ID=apstndb-sandbox \
+  go test -tags=integration -count=1 -run TestSmartAccessTokenSource_AIP4111JWTAccessWithScope_serviceUsage ./integration/...
+rm -f "$tmp"
+```
+
+### AIP-4111 service account key secret
+
+The persistent key is intentionally limited to the AIP-4111 route test:
+
+- Service account: `adcplus-aip4111-it@apstndb-sandbox.iam.gserviceaccount.com`
+- Project role: `roles/serviceusage.serviceUsageViewer` on `apstndb-sandbox`
+- Secret: `adcplus-aip4111-service-account-key`
+- CI access: `roles/secretmanager.secretAccessor` on that secret only for `adcplus-ci@apstndb-sandbox.iam.gserviceaccount.com`
+
+Do not manage the key material through Terraform, because service account key private material would end up in Terraform state. Create or rotate the key with `gcloud iam service-accounts keys create`, add the JSON as a Secret Manager version, then delete the local file.
+
 ## IAM roles reference for adcplus tests
 
 | Scenario | IAM role | Where |
 |----------|----------|-------|
 | GitHub OIDC → SA | `roles/iam.workloadIdentityUser` | On `adcplus-ci` SA, member = WIF principalSet for `apstndb/adcplus` |
 | WIF → external_account ADC | (automatic via auth action) | N/A |
+| CI reads AIP-4111 key secret | `roles/secretmanager.secretAccessor` | Secret-level on `adcplus-aip4111-service-account-key` |
+| AIP-4111 key calls Service Usage list | `roles/serviceusage.serviceUsageViewer` | Project-level on `adcplus-aip4111-it` |
 | Self-impersonation (`CLOUDSDK_AUTH_IMPERSONATE_SERVICE_ACCOUNT=adcplus-ci@...`) | `roles/iam.serviceAccountTokenCreator` | On target SA (self) |
 | Impersonate another SA | `roles/iam.serviceAccountTokenCreator` | On target SA, member = `adcplus-ci` |
 | `SmartSigner` / `SmartAccessTokenSource` via Credentials API | `roles/iam.serviceAccountUser` | Project-level on `adcplus-ci` |

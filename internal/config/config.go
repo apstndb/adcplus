@@ -6,6 +6,7 @@ type AdcPlusConfig struct {
 	TargetPrincipal       string
 	Delegates             []string
 	EnableAppEngineSigner bool
+	UseJWTAccessWithScope bool
 	Scopes                []string
 	CredentialsFile       string
 	CredentialsJSON       []byte

@@ -20,6 +20,8 @@ env:
   GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER || 'projects/463253289144/locations/global/workloadIdentityPools/github/providers/github' }}
   GCP_SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT || 'adcplus-ci@apstndb-sandbox.iam.gserviceaccount.com' }}
   ADCPLUS_IMPERSONATION_TARGET: ${{ vars.ADCPLUS_IMPERSONATION_TARGET || vars.GCP_SERVICE_ACCOUNT || 'adcplus-ci@apstndb-sandbox.iam.gserviceaccount.com' }}
+  ADCPLUS_AIP4111_PROJECT_ID: ${{ vars.ADCPLUS_AIP4111_PROJECT_ID || vars.GCP_PROJECT_ID || 'apstndb-sandbox' }}
+  ADCPLUS_AIP4111_SECRET: ${{ vars.ADCPLUS_AIP4111_SECRET || 'adcplus-aip4111-service-account-key' }}
 
 jobs:
   integration:
@@ -53,8 +55,28 @@ jobs:
               sys.exit(f"expected external_account, got {cred.get('type')!r}")
           PY
 
+      - name: Fetch AIP-4111 service account key
+        env:
+          KEY_FILE: ${{ runner.temp }}/adcplus-aip4111-service-account-key.json
+        run: |
+          umask 077
+          gcloud secrets versions access latest \
+            --project="${GCP_PROJECT_ID}" \
+            --secret="${ADCPLUS_AIP4111_SECRET}" \
+            > "${KEY_FILE}"
+          echo "ADCPLUS_AIP4111_SERVICE_ACCOUNT_KEY_FILE=${KEY_FILE}" >> "${GITHUB_ENV}"
+
       - name: Run integration tests
         run: go test -tags=integration -count=1 -v ./integration/...
 
       - name: Run unit tests
         run: go test ./...
+
+      - name: Remove AIP-4111 service account key file
+        if: always()
+        env:
+          KEY_FILE: ${{ runner.temp }}/adcplus-aip4111-service-account-key.json
+        run: |
+          if [ -n "${KEY_FILE}" ] && [ -f "${KEY_FILE}" ]; then
+            rm -f "${KEY_FILE}"
+          fi

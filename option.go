@@ -17,6 +17,22 @@ func WithExperimentalAppEngineSigner(enable bool) Option {
 	}
 }
 
+// WithJWTAccessWithScope returns Option which specifies to use scope-based
+// self-signed JWT access tokens when SmartAccessTokenSource is clearly using
+// service account JSON credentials.
+//
+// This is an AIP-4111 opt-in optimization for services known to support
+// self-signed JWT access tokens with scopes. It only applies to service account
+// JSON credentials supplied by WithCredentialsJSON or WithCredentialsFile, and
+// does not apply to impersonation, WithTokenSource, ADC, ID tokens, or
+// non-service-account credential types.
+func WithJWTAccessWithScope(enable bool) Option {
+	return func(config *config.AdcPlusConfig) error {
+		config.UseJWTAccessWithScope = enable
+		return nil
+	}
+}
+
 // WithTargetPrincipal returns Option which specifies the target principal for impersonation.
 func WithTargetPrincipal(targetPrincipal string) Option {
 	return func(config *config.AdcPlusConfig) error {
